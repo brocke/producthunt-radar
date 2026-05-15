@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUp, ExternalLink, MessageSquare } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { SummaryPanel } from "@/components/summary-panel";
+import { getCachedSummary } from "@/lib/ai/queries";
 import { sanitizeRichText } from "@/lib/format/rich-text";
 import { getPostDetails } from "@/lib/ph/posts";
 
@@ -33,6 +35,7 @@ export default async function PostDetailPage({
   const topics = post.topics.edges.map((e) => e.node);
   const comments = post.comments.edges.map((e) => e.node);
   const launchedAt = post.featuredAt ?? post.createdAt;
+  const cachedSummary = getCachedSummary(post.id);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
@@ -130,6 +133,13 @@ export default async function PostDetailPage({
           ))}
         </p>
       )}
+
+      <div className="mt-6">
+        <SummaryPanel
+          slug={post.slug}
+          initialSummary={cachedSummary?.summary ?? null}
+        />
+      </div>
 
       {post.description && (
         <section className="mt-8 border-t pt-8">

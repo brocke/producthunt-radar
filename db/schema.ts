@@ -49,3 +49,23 @@ export const snapshots = sqliteTable("snapshots", {
 
 export type SnapshotRow = typeof snapshots.$inferSelect;
 export type SnapshotInsert = typeof snapshots.$inferInsert;
+
+/**
+ * Cached Claude summaries — one row per post. We keep the model id and
+ * token usage so we can later filter/expire/regenerate selectively.
+ * See plan.md §5 (Phase 7) and §8 (AI-Kosten).
+ */
+export const aiSummaries = sqliteTable("ai_summaries", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  phPostId: text("ph_post_id").notNull().unique(),
+  summary: text("summary").notNull(),
+  model: text("model").notNull(),
+  inputTokens: integer("input_tokens").notNull().default(0),
+  outputTokens: integer("output_tokens").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type AiSummaryRow = typeof aiSummaries.$inferSelect;
+export type AiSummaryInsert = typeof aiSummaries.$inferInsert;
