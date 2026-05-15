@@ -3,9 +3,16 @@ import { ArrowUp, MessageSquare } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { WatchlistButton } from "@/components/watchlist-button";
 import type { PHPost } from "@/lib/ph/types";
 
-export function PostCard({ post }: { post: PHPost }) {
+export function PostCard({
+  post,
+  inWatchlist = false,
+}: {
+  post: PHPost;
+  inWatchlist?: boolean;
+}) {
   const topics = post.topics.edges.map((e) => e.node);
 
   return (
@@ -33,15 +40,27 @@ export function PostCard({ post }: { post: PHPost }) {
             <div className="size-16 flex-shrink-0 rounded-md bg-muted sm:size-20" />
           )}
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-3">
               <h2 className="text-lg font-semibold leading-tight tracking-tight">
                 {post.name}
               </h2>
-              <div className="flex shrink-0 items-center gap-1 text-foreground/80">
-                <ArrowUp className="size-3.5" aria-hidden />
-                <span className="text-base font-semibold tabular-nums">
-                  {post.votesCount}
-                </span>
+              <div className="flex shrink-0 items-center gap-2">
+                <WatchlistButton
+                  post={{
+                    phPostId: post.id,
+                    slug: post.slug,
+                    name: post.name,
+                    tagline: post.tagline,
+                    thumbnailUrl: post.thumbnail?.url ?? null,
+                  }}
+                  initialActive={inWatchlist}
+                />
+                <div className="flex items-center gap-1 text-foreground/80">
+                  <ArrowUp className="size-3.5" aria-hidden />
+                  <span className="text-base font-semibold tabular-nums">
+                    {post.votesCount}
+                  </span>
+                </div>
               </div>
             </div>
             <p className="line-clamp-2 text-sm text-muted-foreground">

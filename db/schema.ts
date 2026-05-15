@@ -1,8 +1,25 @@
 // Drizzle schema for ProductHunt Radar.
-// Tables will be added as we implement phases:
-//   - Phase 5: `watchlist`
-//   - Phase 6: `snapshots`
-//   - Phase 7: `ai_summaries`
-// See plan.md §7 for the full intended schema layout.
+// See plan.md §7 for the intended scope.
 
-export {};
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+
+/**
+ * Posts the user explicitly starred. We denormalize a few PH fields
+ * (name, tagline, thumbnail) so the watchlist page can render without
+ * hitting the PH API for every entry.
+ */
+export const watchlist = sqliteTable("watchlist", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  phPostId: text("ph_post_id").notNull().unique(),
+  slug: text("slug").notNull(),
+  name: text("name").notNull(),
+  tagline: text("tagline"),
+  thumbnailUrl: text("thumbnail_url"),
+  addedAt: integer("added_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  note: text("note"),
+});
+
+export type WatchlistRow = typeof watchlist.$inferSelect;
+export type WatchlistInsert = typeof watchlist.$inferInsert;
