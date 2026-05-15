@@ -2,7 +2,7 @@
 // Server-side only — relies on PH_TOKEN being available in process.env.
 
 import { phRequest } from "./client";
-import { POST_DETAILS, TODAY_POSTS } from "./queries";
+import { POST_DETAILS, SNAPSHOT_POSTS, TODAY_POSTS } from "./queries";
 import type {
   PHPost,
   PHPostDetails,
@@ -38,4 +38,20 @@ export async function getPostDetails(
     slug,
   });
   return response.post;
+}
+
+/**
+ * Wider snapshot fetch — top 50 posts from the last 48 hours.
+ * Used by the cron job to build the time-series in `snapshots`.
+ */
+export async function getSnapshotPosts(): Promise<PHPost[]> {
+  const postedAfter = new Date(
+    Date.now() - 48 * 60 * 60 * 1000,
+  ).toISOString();
+
+  const response = await phRequest<TodayPostsResponse>(SNAPSHOT_POSTS, {
+    postedAfter,
+  });
+
+  return response.posts.edges.map((edge) => edge.node);
 }

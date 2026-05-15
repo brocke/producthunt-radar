@@ -26,6 +26,29 @@ export const TODAY_POSTS = gql`
   }
 `;
 
+export const SNAPSHOT_POSTS = gql`
+  query SnapshotPosts($postedAfter: DateTime!) {
+    posts(first: 50, order: VOTES, postedAfter: $postedAfter) {
+      edges {
+        node {
+          id
+          slug
+          name
+          tagline
+          votesCount
+          commentsCount
+          createdAt
+          featuredAt
+          thumbnail { url }
+          topics(first: 5) {
+            edges { node { id name slug } }
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const POST_DETAILS = gql`
   query PostDetails($slug: String!) {
     post(slug: $slug) {
