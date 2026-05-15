@@ -1,5 +1,6 @@
 "use client";
 
+import { startTransition, useOptimistic } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -18,27 +19,35 @@ import {
 export function SortControl() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const current = parseSortKey(searchParams.get("sort") ?? undefined);
+  const fromUrl = parseSortKey(searchParams.get("sort") ?? undefined);
+  // Without an optimistic value, Base UI's Select briefly shows the check
+  // mark on both old and new item during the router.push roundtrip —
+  // KOE-351. Reflecting the click locally keeps the controlled value in
+  // sync with the user's intent before the URL updates.
+  const [sort, setOptimisticSort] = useOptimistic(fromUrl);
 
   function handleChange(value: string | null) {
     if (!value) return;
     const next = parseSortKey(value);
-    const params = new URLSearchParams(searchParams.toString());
-    if (next === "votes") {
-      params.delete("sort");
-    } else {
-      params.set("sort", next);
-    }
-    const qs = params.toString();
-    router.push(qs ? `/?${qs}` : "/", { scroll: false });
+    startTransition(() => {
+      setOptimisticSort(next);
+      const params = new URLSearchParams(searchParams.toString());
+      if (next === "votes") {
+        params.delete("sort");
+      } else {
+        params.set("sort", next);
+      }
+      const qs = params.toString();
+      router.push(qs ? `/?${qs}` : "/", { scroll: false });
+    });
   }
 
   return (
-    <Select value={current} onValueChange={handleChange}>
+    <Select value={sort} onValueChange={handleChange}>
       <SelectTrigger className="w-[170px]" aria-label="Sort posts">
         <span>
           <span className="text-muted-foreground">Sort:</span>{" "}
-          {SORT_LABELS[current]}
+          {SORT_LABELS[sort]}
         </span>
       </SelectTrigger>
       <SelectContent>
