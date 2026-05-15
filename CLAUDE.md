@@ -5,7 +5,7 @@ Projektspezifische Anweisungen für Claude Code.
 
 ---
 
-## 🚀 Aktueller Stand (Stand 2026-05-15)
+## 🚀 Aktueller Stand (Stand 2026-05-16)
 
 **MVP komplett.** Alle 10 Phasen aus `plan.md` (0–9) sind umgesetzt und auf den Hetzner-VPS deployed.
 
@@ -24,7 +24,6 @@ Vom Mac via Bash-Tool, 1Password approvet SSH-Agent. Rebuild ~40s.
 **Server-Architektur:** `news-caddy` (Caddy 2 Reverse-Proxy, 80/443) terminiert TLS für news-app UND ph-radar. Beide Apps sind Container im `news-app_web`-Netzwerk. ph-radar SQLite persistent in Docker-Volume `phr-data` → `/data/data.db`. node-cron beim Container-Start, Snapshots alle 6h.
 
 **Offene Punkte:**
-- [KOE-351](https://linear.app/koerting-institute/issue/KOE-351) — kosmetischer Sort-Dropdown-Glitch beim Wechsel (kein Daten-Bug)
 - `plan.md` §10 "Später" — Trend-Visualisierung auf Basis der Snapshots-DB. Erst sinnvoll nach 2-4 Wochen Datensammlung.
 
 **Memory-Einträge** (siehe `~/.claude/projects/.../memory/`):
