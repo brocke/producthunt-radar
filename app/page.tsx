@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Newspaper, Star } from "lucide-react";
 import Link from "next/link";
 
 import { PostCard } from "@/components/post-card";
@@ -46,19 +46,29 @@ export default async function HomePage({
               : `${visible.length} of ${allPosts.length} launches match your filters.`}
           </p>
         </div>
-        <Button
-          variant="outline"
-          className="gap-1.5"
-          render={<Link href="/watchlist" />}
-        >
-          <Star className="size-4" aria-hidden />
-          Watchlist
-          {watchedIds.size > 0 && (
-            <span className="ml-1 rounded-full bg-foreground px-1.5 text-xs font-medium text-background">
-              {watchedIds.size}
-            </span>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="gap-1.5"
+            render={<Link href="/digest" />}
+          >
+            <Newspaper className="size-4" aria-hidden />
+            Digest
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-1.5"
+            render={<Link href="/watchlist" />}
+          >
+            <Star className="size-4" aria-hidden />
+            Watchlist
+            {watchedIds.size > 0 && (
+              <span className="ml-1 rounded-full bg-foreground px-1.5 text-xs font-medium text-background">
+                {watchedIds.size}
+              </span>
+            )}
+          </Button>
+        </div>
       </header>
 
       <div className="mb-6 flex flex-wrap items-center gap-2">
