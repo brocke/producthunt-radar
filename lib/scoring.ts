@@ -14,20 +14,28 @@ export const SORT_LABELS: Record<SortKey, string> = {
 };
 
 /**
- * Velocity = votes per hour since launch, with mild damping so very young
- * posts don't blow up the score. Default exponent 0.8 favors fresh posts
- * but still rewards sustained traction.
+ * Velocity = votes per hour since the post was created, with mild damping so
+ * very young posts don't blow up the score. Default exponent 0.8 favors fresh
+ * posts but still rewards sustained traction.
+ *
+ * We use `createdAt` rather than `featuredAt` because PH stamps all posts of
+ * the same launch day with the same `featuredAt` (e.g. 08:00 UTC) — that
+ * collapses every post to the same "hours since launch" and makes velocity
+ * fall back to a pure votes ranking. `createdAt` is second-granular and
+ * actually differentiates posts.
  *
  * Easy to retune: lower exponent (e.g. 0.6) = stronger young-post bonus;
  * exponent 1.0 = pure votes-per-hour.
  */
 export function velocity(
-  post: Pick<PHPost, "votesCount" | "createdAt" | "featuredAt">,
+  post: Pick<PHPost, "votesCount" | "createdAt">,
   now: number = Date.now(),
   exponent = 0.8,
 ): number {
-  const launchedAt = post.featuredAt ?? post.createdAt;
-  const hours = Math.max(1, (now - new Date(launchedAt).getTime()) / 3_600_000);
+  const hours = Math.max(
+    1,
+    (now - new Date(post.createdAt).getTime()) / 3_600_000,
+  );
   return post.votesCount / Math.pow(hours, exponent);
 }
 
@@ -37,10 +45,16 @@ export function sortPosts(posts: PHPost[], sort: SortKey): PHPost[] {
     return [...posts].sort((a, b) => velocity(b, now) - velocity(a, now));
   }
   if (sort === "time") {
+    // Surprising-but-true: PH gives every post of the same launch day the
+    // same `createdAt` value (a daily slot timestamp like "07:01:00Z"),
+    // so neither createdAt nor featuredAt actually differentiates posts.
+    // Fall back to the numeric post id, which PH assigns monotonically —
+    // higher id = later submission.
     return [...posts].sort((a, b) => {
-      const at = new Date(a.featuredAt ?? a.createdAt).getTime();
-      const bt = new Date(b.featuredAt ?? b.createdAt).getTime();
-      return bt - at;
+      const at = new Date(a.createdAt).getTime();
+      const bt = new Date(b.createdAt).getTime();
+      if (at !== bt) return bt - at;
+      return Number(b.id) - Number(a.id);
     });
   }
   // default: votes
