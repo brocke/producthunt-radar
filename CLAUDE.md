@@ -3,6 +3,34 @@
 Projektspezifische Anweisungen für Claude Code.
 Überschreibt die globale `~/.claude/CLAUDE.md`.
 
+---
+
+## 🚀 Aktueller Stand (Stand 2026-05-15)
+
+**MVP komplett.** Alle 10 Phasen aus `plan.md` (0–9) sind umgesetzt und auf den Hetzner-VPS deployed.
+
+**Live:** https://ph-radar.filbro.de (HTTPS via Caddy, HTTP Basic Auth aktiv).
+
+**Verzeichnis-Mapping:**
+- Lokal: `/Users/filbroki/Documents/Claude Code/ProductHunt Radar/`
+- Server: `/root/ph-radar/` auf `46.225.137.255` (Ubuntu 24.04, Docker)
+
+**Deployment-Workflow** (für Code-Updates):
+```bash
+ssh root@46.225.137.255 "cd /root/ph-radar && git pull && docker compose up -d --build"
+```
+Vom Mac via Bash-Tool, 1Password approvet SSH-Agent. Rebuild ~40s.
+
+**Server-Architektur:** `news-caddy` (Caddy 2 Reverse-Proxy, 80/443) terminiert TLS für news-app UND ph-radar. Beide Apps sind Container im `news-app_web`-Netzwerk. ph-radar SQLite persistent in Docker-Volume `phr-data` → `/data/data.db`. node-cron beim Container-Start, Snapshots alle 6h.
+
+**Offene Punkte:**
+- [KOE-351](https://linear.app/koerting-institute/issue/KOE-351) — kosmetischer Sort-Dropdown-Glitch beim Wechsel (kein Daten-Bug)
+- `plan.md` §10 "Später" — Trend-Visualisierung auf Basis der Snapshots-DB. Erst sinnvoll nach 2-4 Wochen Datensammlung.
+
+**Memory-Einträge** (siehe `~/.claude/projects/.../memory/`):
+- `project_deployment.md` — Details zum Hetzner-Setup, Caddy, Container, SSH-Keys
+- `reference_ph_api_quirks.md` — PH API page-Limit 20, identische `createdAt` pro Tag, ID-Tiebreaker
+
 > **Architektur-Wahrheit ist `plan.md`** — dort steht der Phasenplan, der Tech-Stack mit Begründungen, das GraphQL-Cheatsheet und alle Gotchas. Diese CLAUDE.md ergänzt nur projektübergreifende Konventionen, dupliziert aber nicht den Plan.
 
 > ⚠️ **Next.js 16 ist installiert, NICHT 15** wie im Plan vorgeschlagen. Next.js 16 hat Breaking Changes ggü. älteren Versionen (App Router APIs, Caching, Server Actions). Bei Unsicherheit: Doku unter `node_modules/next/dist/docs/` konsultieren (siehe `AGENTS.md`).
