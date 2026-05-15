@@ -1,0 +1,39 @@
+# ProductHunt Radar — production compose for the Hetzner VPS.
+# Run from /root/ph-radar/ on the server:
+#   docker compose up -d --build
+#
+# Plugs into the existing `news-app_web` Docker network so that the shared
+# Caddy container (from /root/news-app) can reverse-proxy ph-radar.filbro.de
+# to this app on its internal port 3000.
+
+services:
+  app:
+    build: .
+    container_name: ph-radar
+    restart: unless-stopped
+    environment:
+      # PH GraphQL API token + Claude key — supplied by .env file on the host.
+      - PH_TOKEN=${PH_TOKEN}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # HTTP Basic Auth (covers all routes except /api/snapshot/*).
+      - AUTH_USER=${AUTH_USER}
+      - AUTH_PASS=${AUTH_PASS}
+      # Snapshot trigger endpoint token (X-Snapshot-Token header).
+      - SNAPSHOT_TOKEN=${SNAPSHOT_TOKEN}
+      # No local-dev bypass in production — auth is enforced.
+      - DISABLE_AUTH=false
+      # SQLite lives in the mounted volume so it survives rebuilds.
+      - DB_PATH=/data/data.db
+    volumes:
+      - phr-data:/data
+    networks:
+      - web
+
+volumes:
+  phr-data:
+
+networks:
+  web:
+    # Re-use the network the news-app's Caddy container is on.
+    external: true
+    name: news-app_web

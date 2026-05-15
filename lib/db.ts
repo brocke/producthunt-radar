@@ -10,8 +10,13 @@ import path from "node:path";
 
 import * as schema from "@/db/schema";
 
-const DB_PATH = path.join(process.cwd(), "db", "data.db");
-const MIGRATIONS_DIR = path.join(process.cwd(), "db", "migrations");
+// In Docker we mount a volume on /data and point DB_PATH there so the
+// database survives container rebuilds. Locally we fall back to db/data.db.
+const DB_PATH =
+  process.env.DB_PATH ?? path.join(process.cwd(), "db", "data.db");
+const MIGRATIONS_DIR =
+  process.env.MIGRATIONS_DIR ??
+  path.join(process.cwd(), "db", "migrations");
 
 declare global {
   // eslint-disable-next-line no-var

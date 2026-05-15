@@ -1,0 +1,15 @@
+.git
+.next
+node_modules
+README.md
+plan.md
+CLAUDE.md
+.env*
+!.env.example
+db/data.db
+db/data.db-*
+.vscode
+.idea
+.DS_Store
+.claude
+*.log
