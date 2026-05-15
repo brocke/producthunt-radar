@@ -31,3 +31,36 @@ export type TodayPostsResponse = {
     edges: Array<{ node: PHPost }>;
   };
 };
+
+export type PHMaker = {
+  id: string;
+  name: string;
+  username: string;
+};
+
+export type PHCommentUser = {
+  name: string;
+  username: string;
+};
+
+export type PHComment = {
+  id: string;
+  body: string;
+  votesCount: number;
+  createdAt: string;
+  user: PHCommentUser;
+};
+
+export type PHPostDetails = PHPost & {
+  description: string | null;
+  website: string | null;
+  url: string;
+  makers: PHMaker[];
+  comments: {
+    edges: Array<{ node: PHComment }>;
+  };
+};
+
+export type PostDetailsResponse = {
+  post: PHPostDetails | null;
+};

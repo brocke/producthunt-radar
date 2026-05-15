@@ -2,8 +2,13 @@
 // Server-side only — relies on PH_TOKEN being available in process.env.
 
 import { phRequest } from "./client";
-import { TODAY_POSTS } from "./queries";
-import type { PHPost, TodayPostsResponse } from "./types";
+import { POST_DETAILS, TODAY_POSTS } from "./queries";
+import type {
+  PHPost,
+  PHPostDetails,
+  PostDetailsResponse,
+  TodayPostsResponse,
+} from "./types";
 
 /**
  * Fetch the current top 20 posts that were posted in the last ~36 hours.
@@ -20,4 +25,17 @@ export async function getTodayPosts(): Promise<PHPost[]> {
   });
 
   return response.posts.edges.map((edge) => edge.node);
+}
+
+/**
+ * Fetch full details for a single post by slug.
+ * Returns null if the slug doesn't resolve to a post.
+ */
+export async function getPostDetails(
+  slug: string,
+): Promise<PHPostDetails | null> {
+  const response = await phRequest<PostDetailsResponse>(POST_DETAILS, {
+    slug,
+  });
+  return response.post;
 }
