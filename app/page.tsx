@@ -1,6 +1,7 @@
 import { Newspaper, Star } from "lucide-react";
 import Link from "next/link";
 
+import { AboutDialog } from "@/components/about-dialog";
 import { PostCard } from "@/components/post-card";
 import { SortControl } from "@/components/sort-control";
 import { TopicFilter } from "@/components/topic-filter";
@@ -68,6 +69,7 @@ export default async function HomePage({
               </span>
             )}
           </Button>
+          <AboutDialog />
         </div>
       </header>
 
