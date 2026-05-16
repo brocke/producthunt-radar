@@ -24,42 +24,42 @@ const features = [
   {
     icon: Gauge,
     label: "Velocity-Ranking",
-    desc: "votes / Stunden seit Launch — junge Wachstumssterne schlagen alte Schwergewichte.",
+    desc: "Upvotes pro Stunde seit Launch — junge Wachstumssterne schlagen alte Schwergewichte.",
   },
   {
     icon: Filter,
     label: "Topic-Filter mit URL-State",
-    desc: "Multi-Select; Filter sind teilbar und überleben den Refresh.",
+    desc: "Mehrere Topics gleichzeitig. Filter überleben den Refresh und sind teilbar.",
   },
   {
     icon: Star,
     label: "Watchlist",
-    desc: "Eigene Merkliste, persistent in lokaler SQLite — nicht im PH-Account.",
+    desc: "Eigene Merkliste in lokaler Datenbank — unabhängig vom Product-Hunt-Account.",
   },
   {
     icon: Sparkles,
-    label: "AI-Summary auf Knopfdruck",
-    desc: "3-Satz-Synthese aus KI-Workshop-Perspektive + Tonalitäts-Read der Kommentare.",
+    label: "KI-Zusammenfassung auf Knopfdruck",
+    desc: "3 Sätze zum Produkt aus deiner KI-Workshop-Brille — plus Stimmungsbild der Kommentare.",
   },
   {
     icon: FileText,
     label: "Daily Digest als Markdown",
-    desc: "Gestrige Top-10 by Velocity, copy-paste-fertig für Newsletter o.ä.",
+    desc: "Gestrige Top-10 nach Velocity, copy-paste-fertig für deinen Newsletter.",
   },
   {
     icon: Database,
-    label: "Snapshots alle 6h",
-    desc: "Append-only-Tabelle als Basis für künftige Trend-Charts und Sleeper-Hit-Erkennung.",
+    label: "Snapshots alle 6 Stunden",
+    desc: "Datensammlung im Hintergrund. Basis für Trend-Charts und Sleeper-Hit-Erkennung.",
   },
 ];
 
 const phLimits = [
-  "Keine transparente Velocity-Sortierung — nur Total-Upvotes oder ihr internes Ranking",
+  "Keine transparente Velocity-Sortierung — nur Upvotes oder das interne Ranking",
   "Keine Wachstums-Historie pro Post (Sleeper-Hits bleiben unsichtbar)",
   "Keine personalisierte KI-Zusammenfassung mit deiner Brille",
   "Keine teilbaren Multi-Topic-Filter-URLs",
   "Keine private Merkliste mit eigenen Notizen",
-  "Kein Markdown-Export, kein Daten-Zugriff für eigene Auswertungen",
+  "Kein Markdown-Export, kein Datenzugriff für eigene Auswertungen",
 ];
 
 export function AboutDialog() {
@@ -79,18 +79,18 @@ export function AboutDialog() {
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-lg">
-            Why this exists
+            Warum es das gibt
           </DialogTitle>
           <DialogDescription>
-            Ein persönliches PH-Dashboard mit Geschwindigkeits-Ranking,
+            Ein persönliches Product-Hunt-Dashboard mit Geschwindigkeits-Ranking,
             KI-Verdichtung und einem wachsenden Daten-Pool — Dinge, die die
-            ProductHunt-Website selbst nicht hergibt.
+            Product-Hunt-Website selbst nicht hergibt.
           </DialogDescription>
         </DialogHeader>
 
         <section className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            What it does
+            Was es kann
           </h3>
           <ul className="grid gap-3 sm:grid-cols-2">
             {features.map(({ icon: Icon, label, desc }) => (
@@ -112,9 +112,9 @@ export function AboutDialog() {
           </ul>
         </section>
 
-        <section className="space-y-2.5 rounded-md border bg-muted/40 px-4 py-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            What ProductHunt itself doesn{"’"}t do
+        <section className="space-y-3 rounded-lg border border-foreground/10 bg-muted/60 px-5 py-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+            Was Product Hunt nicht bietet
           </h3>
           <ul className="space-y-1.5">
             {phLimits.map((limit) => (
