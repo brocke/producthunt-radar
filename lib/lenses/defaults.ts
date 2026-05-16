@@ -3,7 +3,7 @@
 // extend this with an ad-hoc free-text prompt the user types into the
 // "Custom..." modal.
 
-export type DefaultLensKey = "workshop" | "replicate" | "discuss";
+export type DefaultLensKey = "workflow" | "replicate" | "discuss";
 
 export type LensDef = {
   key: DefaultLensKey;
@@ -13,12 +13,12 @@ export type LensDef = {
 };
 
 export const DEFAULT_LENSES: Record<DefaultLensKey, LensDef> = {
-  workshop: {
-    key: "workshop",
-    label: "Workshop",
-    description: "Tools, die ich für KI-Workshops, Coaching oder eigene Produktivität einsetzen kann.",
+  workflow: {
+    key: "workflow",
+    label: "Workflow",
+    description: "Tools, die ich für meinen Arbeitsalltag (KI-Entwicklung, Workshops, Coaching, Beratung) einsetzen kann.",
     prompt:
-      "Bewerte, wie nützlich dieses Tool für jemanden ist, der KI-Workshops, Coaching oder Beratung anbietet und nach Tools für den eigenen Arbeitsfluss sucht. Hoher Score (8–10) bei: direkter Workflow-Nutzen, sofort einsetzbar, klares Use Case für Kreativ- und Wissensarbeit. Mittlerer Score (4–7) bei: indirekt nützlich, gehört in den breiteren KI-Tool-Kosmos. Niedriger Score (0–3) bei: hochspezielle B2B-Nische, reines Entertainment, technische Spielereien ohne Anwendungsbezug.",
+      "Bewerte, wie nützlich dieses Tool für jemanden ist, der KI-Anwendungen baut, Workshops und Coaching anbietet und nach Tools für den eigenen Arbeitsfluss sucht. Hoher Score (8–10) bei: direkter Workflow-Nutzen, sofort einsetzbar, klares Use Case für Kreativ-, Wissens- oder KI-Arbeit. Mittlerer Score (4–7) bei: indirekt nützlich, gehört in den breiteren KI-Tool-Kosmos. Niedriger Score (0–3) bei: hochspezielle B2B-Nische, reines Entertainment, technische Spielereien ohne Anwendungsbezug.",
   },
   replicate: {
     key: "replicate",

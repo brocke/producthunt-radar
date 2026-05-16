@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useOptimistic } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Wand2, X } from "lucide-react";
+import { Sparkles, Wand2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +26,12 @@ export function LensSelector() {
   const currentLens = searchParams.get("lens");
   const currentCustomQ = searchParams.get("q") ?? "";
   const [isPending, startTransition] = useTransition();
+  // The optimistic lens reflects the user's click immediately so the
+  // "active" highlight + pulsing indicator follow the new target, not
+  // the previous one, during the Claude scoring round-trip.
+  const [optimisticLens, setOptimisticLens] = useOptimistic(currentLens);
+  const [optimisticCustomQ, setOptimisticCustomQ] =
+    useOptimistic(currentCustomQ);
 
   function applyLens(key: string | null, customPrompt?: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -42,49 +48,79 @@ export function LensSelector() {
     }
     const qs = params.toString();
     startTransition(() => {
+      setOptimisticLens(key);
+      setOptimisticCustomQ(key === "custom" ? (customPrompt ?? "") : "");
       router.push(qs ? `/?${qs}` : "/", { scroll: false });
     });
   }
 
+  const activeLensLabel =
+    optimisticLens && optimisticLens !== "custom"
+      ? DEFAULT_LENSES[optimisticLens as keyof typeof DEFAULT_LENSES]?.label
+      : optimisticLens === "custom"
+        ? "Eigene Brille"
+        : null;
+
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="text-xs font-medium text-muted-foreground">Lens:</span>
-      {DEFAULT_LENS_KEYS.map((key) => {
-        const def = DEFAULT_LENSES[key];
-        const active = currentLens === key;
-        return (
+    <section className="rounded-lg border border-foreground/10 bg-muted/40 px-4 py-3">
+      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-foreground">
+        <Sparkles className="size-3.5 text-foreground/70" aria-hidden />
+        Brillen
+        <span className="text-muted-foreground/80 normal-case font-normal tracking-normal">
+          — KI-gestützter Re-Ranking-Filter
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        {DEFAULT_LENS_KEYS.map((key) => {
+          const def = DEFAULT_LENSES[key];
+          const active = optimisticLens === key;
+          const pendingHere = isPending && active;
+          return (
+            <Button
+              key={key}
+              variant={active ? "default" : "outline"}
+              size="sm"
+              onClick={() => applyLens(active ? null : key)}
+              title={def.description}
+              className={cn(pendingHere && "animate-pulse")}
+            >
+              {def.label}
+            </Button>
+          );
+        })}
+        <CustomLensDialog
+          active={optimisticLens === "custom"}
+          currentPrompt={optimisticLens === "custom" ? optimisticCustomQ : ""}
+          pending={isPending && optimisticLens === "custom"}
+          onApply={(prompt) => applyLens("custom", prompt)}
+        />
+        {optimisticLens && (
           <Button
-            key={key}
-            variant={active ? "default" : "outline"}
-            size="sm"
-            onClick={() => applyLens(active ? null : key)}
-            title={def.description}
-            className={cn(
-              isPending && active && "animate-pulse",
-            )}
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => applyLens(null)}
+            aria-label="Brille entfernen"
+            className="text-muted-foreground"
           >
-            {def.label}
+            <X className="size-3.5" aria-hidden />
           </Button>
-        );
-      })}
-      <CustomLensDialog
-        active={currentLens === "custom"}
-        currentPrompt={currentLens === "custom" ? currentCustomQ : ""}
-        pending={isPending && currentLens === "custom"}
-        onApply={(prompt) => applyLens("custom", prompt)}
-      />
-      {currentLens && (
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => applyLens(null)}
-          aria-label="Lens entfernen"
-          className="text-muted-foreground"
-        >
-          <X className="size-3.5" aria-hidden />
-        </Button>
+        )}
+      </div>
+      {optimisticLens === "custom" && optimisticCustomQ && (
+        <div className="mt-2.5 flex items-start gap-2 rounded-md border border-foreground/10 bg-background/60 px-3 py-2 text-xs text-muted-foreground">
+          <Wand2
+            className="mt-0.5 size-3.5 shrink-0 text-foreground/60"
+            aria-hidden
+          />
+          <p className="italic leading-relaxed">{optimisticCustomQ}</p>
+        </div>
       )}
-    </div>
+      {activeLensLabel && optimisticLens !== "custom" && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Aktive Brille: <span className="font-medium text-foreground">{activeLensLabel}</span>
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -111,7 +147,13 @@ function CustomLensDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setText(currentPrompt); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (o) setText(currentPrompt);
+      }}
+    >
       <DialogTrigger
         render={
           <Button
