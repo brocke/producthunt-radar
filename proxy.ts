@@ -1,5 +1,8 @@
 // HTTP Basic Auth for the whole app. See plan.md §5 → Phase 9.
 //
+// Filename + export name follow Next.js 16 convention (proxy.ts /
+// `proxy`), which replaces the deprecated middleware.ts convention.
+//
 // - All paths require Basic Auth (browser prompts via WWW-Authenticate).
 // - DISABLE_AUTH=true bypasses everything — intended for local dev.
 // - /api/snapshot/* uses a static token header instead, so an external
@@ -34,7 +37,7 @@ function decodeBasic(header: string): { user: string; pass: string } | null {
   }
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Local-dev escape hatch.
   if (process.env.DISABLE_AUTH === "true") {
     return NextResponse.next();
