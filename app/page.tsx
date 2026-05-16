@@ -2,11 +2,15 @@ import { Newspaper, Star } from "lucide-react";
 import Link from "next/link";
 
 import { AboutDialog } from "@/components/about-dialog";
+import { LensSelector } from "@/components/lens-selector";
 import { PostCard } from "@/components/post-card";
 import { SortControl } from "@/components/sort-control";
 import { TopicFilter } from "@/components/topic-filter";
 import { Button } from "@/components/ui/button";
+import { resolveLens } from "@/lib/lenses/defaults";
+import { getScoresForLens, type LensScoreMap } from "@/lib/lenses/run";
 import { getTodayPosts } from "@/lib/ph/posts";
+import type { PHPost } from "@/lib/ph/types";
 import {
   filterByTopics,
   parseSortKey,
@@ -16,22 +20,51 @@ import {
 } from "@/lib/scoring";
 import { getWatchlistIds } from "@/lib/watchlist/queries";
 
+function sortByLensScore(
+  posts: PHPost[],
+  scores: LensScoreMap,
+): PHPost[] {
+  return [...posts].sort((a, b) => {
+    const sa = scores.get(a.id)?.score ?? 0;
+    const sb = scores.get(b.id)?.score ?? 0;
+    if (sa !== sb) return sb - sa;
+    return b.votesCount - a.votesCount;
+  });
+}
+
 // Refetch the PH feed at most every 10 minutes — see plan.md §8 (Caching).
 export const revalidate = 600;
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; topics?: string }>;
+  searchParams: Promise<{
+    sort?: string;
+    topics?: string;
+    lens?: string;
+    q?: string;
+  }>;
 }) {
   const params = await searchParams;
   const sort = parseSortKey(params.sort);
   const selectedTopicSlugs = parseTopicSlugs(params.topics);
+  const lens = resolveLens(params.lens, params.q);
 
   const allPosts = await getTodayPosts();
   const watchedIds = getWatchlistIds();
   const filtered = filterByTopics(allPosts, selectedTopicSlugs);
-  const visible = sortPosts(filtered, sort);
+
+  // When a lens is active, re-rank by Claude scores (and dim low-scorers
+  // in PostCard via the `lens` prop). Otherwise fall back to the regular
+  // sort dropdown.
+  let lensScores: LensScoreMap | null = null;
+  let visible: PHPost[];
+  if (lens) {
+    lensScores = await getScoresForLens(filtered, lens.key, lens.prompt);
+    visible = sortByLensScore(filtered, lensScores);
+  } else {
+    visible = sortPosts(filtered, sort);
+  }
   const topics = uniqueTopics(allPosts);
 
   return (
@@ -42,9 +75,11 @@ export default async function HomePage({
             ProductHunt Radar
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {visible.length === allPosts.length
-              ? `${allPosts.length} launches from the last 36 hours.`
-              : `${visible.length} of ${allPosts.length} launches match your filters.`}
+            {lens
+              ? `${visible.length} launches, neu sortiert durch Lens: ${lens.label}.`
+              : visible.length === allPosts.length
+                ? `${allPosts.length} launches from the last 36 hours.`
+                : `${visible.length} of ${allPosts.length} launches match your filters.`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -73,9 +108,12 @@ export default async function HomePage({
         </div>
       </header>
 
-      <div className="mb-6 flex flex-wrap items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <SortControl />
         <TopicFilter topics={topics} />
+      </div>
+      <div className="mb-6">
+        <LensSelector />
       </div>
 
       {visible.length === 0 ? (
@@ -88,7 +126,11 @@ export default async function HomePage({
         <ul className="flex flex-col gap-3">
           {visible.map((post) => (
             <li key={post.id}>
-              <PostCard post={post} inWatchlist={watchedIds.has(post.id)} />
+              <PostCard
+                post={post}
+                inWatchlist={watchedIds.has(post.id)}
+                lens={lensScores?.get(post.id)}
+              />
             </li>
           ))}
         </ul>

@@ -1,7 +1,12 @@
 // Drizzle schema for ProductHunt Radar.
 // See plan.md §7 for the intended scope.
 
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 /**
  * Posts the user explicitly starred. We denormalize a few PH fields
@@ -69,3 +74,35 @@ export const aiSummaries = sqliteTable("ai_summaries", {
 
 export type AiSummaryRow = typeof aiSummaries.$inferSelect;
 export type AiSummaryInsert = typeof aiSummaries.$inferInsert;
+
+/**
+ * Cached per-post scores under a given "lens" (a user-defined filter
+ * perspective). lens_key is one of the built-in lens slugs (workshop,
+ * replicate, discuss) or "custom:<hash>" for ad-hoc prompts. Score 0-10,
+ * reason is a one-sentence justification from Claude.
+ */
+export const lensScores = sqliteTable(
+  "lens_scores",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    phPostId: text("ph_post_id").notNull(),
+    lensKey: text("lens_key").notNull(),
+    score: integer("score").notNull(),
+    reason: text("reason").notNull(),
+    model: text("model").notNull(),
+    inputTokens: integer("input_tokens").notNull().default(0),
+    outputTokens: integer("output_tokens").notNull().default(0),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("lens_scores_post_lens_unique").on(
+      table.phPostId,
+      table.lensKey,
+    ),
+  ],
+);
+
+export type LensScoreRow = typeof lensScores.$inferSelect;
+export type LensScoreInsert = typeof lensScores.$inferInsert;

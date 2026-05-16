@@ -5,18 +5,29 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { WatchlistButton } from "@/components/watchlist-button";
 import type { PHPost } from "@/lib/ph/types";
+import { cn } from "@/lib/utils";
+
+export type LensHit = { score: number; reason: string };
 
 export function PostCard({
   post,
   inWatchlist = false,
+  lens,
 }: {
   post: PHPost;
   inWatchlist?: boolean;
+  lens?: LensHit;
 }) {
   const topics = post.topics.edges.map((e) => e.node);
+  const dimmed = lens != null && lens.score < 4;
 
   return (
-    <article className="relative">
+    <article
+      className={cn(
+        "relative transition-opacity",
+        dimmed && "opacity-50 hover:opacity-100",
+      )}
+    >
       {/* Invisible link overlay covers the card without nesting children inside <a>,
           which keeps room for the watchlist button in Phase 5. */}
       <Link
@@ -66,6 +77,21 @@ export function PostCard({
             <p className="line-clamp-2 text-sm text-muted-foreground">
               {post.tagline}
             </p>
+            {lens && (
+              <p className="mt-0.5 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground/90">
+                <span
+                  className={cn(
+                    "inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
+                    lens.score >= 8 && "bg-foreground text-background",
+                    lens.score >= 4 && lens.score < 8 && "bg-foreground/15 text-foreground/90",
+                    lens.score < 4 && "bg-foreground/5 text-foreground/60",
+                  )}
+                >
+                  {lens.score}/10
+                </span>
+                <span className="line-clamp-2 italic">{lens.reason}</span>
+              </p>
+            )}
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               {topics.slice(0, 4).map((t) => (
                 <Badge
