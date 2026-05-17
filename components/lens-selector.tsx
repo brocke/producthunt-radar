@@ -88,6 +88,10 @@ export function LensSelector() {
   // Which template (if any) matches the draft right now? Used to highlight
   // the template button.
   const draftMatchKey = findMatchingDefaultLens(draft);
+  // Which template (if any) matches the currently *active* prompt — i.e. the
+  // one that actually filters the feed right now. Stays stable while the
+  // user types a new draft, so the Active-Lens pill keeps its label.
+  const activeMatchKey = findMatchingDefaultLens(optimisticActive);
   const isDirty = draft.trim() !== optimisticActive.trim();
   const hasLens = optimisticActive.trim().length > 0;
 
@@ -129,10 +133,9 @@ export function LensSelector() {
           disabled={isPending}
           className={cn(
             "w-full rounded-md border border-input bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 disabled:opacity-100",
-            isPending &&
-              "border-foreground/40 ring-2 ring-foreground/15 [animation:pulse_1.4s_ease-in-out_infinite]",
+            isPending && "border-foreground/40 ring-2 ring-foreground/15",
           )}
-          rows={3}
+          rows={5}
           maxLength={800}
           onKeyDown={(e) => {
             // Cmd/Ctrl+Enter = Anwenden
@@ -145,23 +148,21 @@ export function LensSelector() {
           }}
         />
         {isPending && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-background/40 backdrop-blur-[1px]">
-            <span className="flex items-center gap-2 rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background shadow-sm">
-              <Loader2 className="size-3.5 animate-spin" aria-hidden />
-              Claude sortiert die Liste neu…
-            </span>
-          </div>
+          <div
+            className="pointer-events-none absolute inset-0 rounded-md bg-background/30 backdrop-blur-[1px]"
+            aria-hidden
+          />
         )}
       </div>
 
       <div className="mt-2 flex items-center justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          {hasLens && !isDirty && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-background">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+          {hasLens && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand px-2.5 py-0.5 text-xs font-medium text-brand-foreground">
               <Sparkles className="size-3" aria-hidden />
               Aktive Lens:{" "}
-              {draftMatchKey
-                ? DEFAULT_LENSES[draftMatchKey].label
+              {activeMatchKey
+                ? DEFAULT_LENSES[activeMatchKey].label
                 : "Eigener Prompt"}
             </span>
           )}

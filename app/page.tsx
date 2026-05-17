@@ -68,7 +68,7 @@ export default async function HomePage({
   const topics = uniqueTopics(allPosts);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
       <header className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
@@ -99,7 +99,7 @@ export default async function HomePage({
             <Star className="size-4" aria-hidden />
             Watchlist
             {watchedIds.size > 0 && (
-              <span className="ml-1 rounded-full bg-foreground px-1.5 text-xs font-medium text-background">
+              <span className="ml-1 rounded-full bg-brand px-1.5 text-xs font-medium text-brand-foreground">
                 {watchedIds.size}
               </span>
             )}
