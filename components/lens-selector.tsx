@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useOptimistic, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Sparkles, X } from "lucide-react";
+import { Loader2, Sparkles, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -121,51 +121,62 @@ export function LensSelector() {
         })}
       </div>
 
-      <textarea
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        placeholder="Beschreibe in ein, zwei Sätzen, wonach gefiltert werden soll — oder wähle eine Vorlage oben."
-        className={cn(
-          "w-full rounded-md border border-input bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30",
-          isPending && "animate-pulse",
-        )}
-        rows={3}
-        maxLength={800}
-        onKeyDown={(e) => {
-          // Cmd/Ctrl+Enter = Anwenden
-          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-            e.preventDefault();
-            if (draft.trim().length >= 3 && (isDirty || !hasLens)) {
-              applyDraft();
+      <div className="relative">
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Beschreibe in ein, zwei Sätzen, wonach gefiltert werden soll — oder wähle eine Vorlage oben."
+          disabled={isPending}
+          className={cn(
+            "w-full rounded-md border border-input bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 disabled:opacity-100",
+            isPending &&
+              "border-foreground/40 ring-2 ring-foreground/15 [animation:pulse_1.4s_ease-in-out_infinite]",
+          )}
+          rows={3}
+          maxLength={800}
+          onKeyDown={(e) => {
+            // Cmd/Ctrl+Enter = Anwenden
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+              e.preventDefault();
+              if (draft.trim().length >= 3 && (isDirty || !hasLens)) {
+                applyDraft();
+              }
             }
-          }
-        }}
-      />
+          }}
+        />
+        {isPending && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-background/40 backdrop-blur-[1px]">
+            <span className="flex items-center gap-2 rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background shadow-sm">
+              <Loader2 className="size-3.5 animate-spin" aria-hidden />
+              Claude sortiert die Liste neu…
+            </span>
+          </div>
+        )}
+      </div>
 
       <div className="mt-2 flex items-center justify-between gap-2">
-        <p className="text-xs text-muted-foreground">
+        <div className="min-w-0 flex-1">
           {hasLens && !isDirty && (
-            <>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-background">
+              <Sparkles className="size-3" aria-hidden />
               Aktive Lens:{" "}
-              <span className="font-medium text-foreground">
-                {draftMatchKey
-                  ? DEFAULT_LENSES[draftMatchKey].label
-                  : "Eigener Prompt"}
-              </span>
-            </>
+              {draftMatchKey
+                ? DEFAULT_LENSES[draftMatchKey].label
+                : "Eigener Prompt"}
+            </span>
           )}
           {hasLens && isDirty && (
-            <span className="italic">
+            <span className="text-xs italic text-muted-foreground">
               Geändert — „Anwenden" für neue Sortierung.
             </span>
           )}
           {!hasLens && draft.trim().length > 0 && (
-            <span className="italic">
+            <span className="text-xs italic text-muted-foreground">
               Bereit zum Anwenden.
             </span>
           )}
-        </p>
-        <div className="flex items-center gap-1.5">
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
           {hasLens && (
             <Button
               variant="ghost"
@@ -173,6 +184,7 @@ export function LensSelector() {
               onClick={clearLens}
               className="gap-1 text-muted-foreground"
               type="button"
+              disabled={isPending}
             >
               <X className="size-3.5" aria-hidden />
               Aufheben
@@ -186,10 +198,17 @@ export function LensSelector() {
               draft.trim().length < 3 ||
               (!isDirty && hasLens)
             }
-            className={cn(isPending && "animate-pulse")}
+            className="gap-1.5"
             type="button"
           >
-            Anwenden
+            {isPending ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                Wird sortiert…
+              </>
+            ) : (
+              "Anwenden"
+            )}
           </Button>
         </div>
       </div>

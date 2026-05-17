@@ -126,6 +126,10 @@
   }
   html {
     @apply font-sans;
+    /* Reserve the scrollbar gutter at all times so layout width stays
+       stable when the page becomes shorter than the viewport (e.g. between
+       loading-skeleton and full feed, or when a Lens dims/changes the list). */
+    scrollbar-gutter: stable;
   }
 }
 
