@@ -20,6 +20,9 @@ export function SortControl() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromUrl = parseSortKey(searchParams.get("sort") ?? undefined);
+  // When a lens is active, it overrides the sort order entirely (see
+  // app/page.tsx). Disabling the dropdown makes that visible.
+  const lensActive = !!searchParams.get("lens");
   // Without an optimistic value, Base UI's Select briefly shows the check
   // mark on both old and new item during the router.push roundtrip —
   // KOE-351. Reflecting the click locally keeps the controlled value in
@@ -43,8 +46,12 @@ export function SortControl() {
   }
 
   return (
-    <Select value={sort} onValueChange={handleChange}>
-      <SelectTrigger className="w-[170px]" aria-label="Sort posts">
+    <Select value={sort} onValueChange={handleChange} disabled={lensActive}>
+      <SelectTrigger
+        className="w-[170px]"
+        aria-label="Sort posts"
+        title={lensActive ? "Sortierung wird durch aktive Lens überschrieben" : undefined}
+      >
         <span>
           <span className="text-muted-foreground">Sort:</span>{" "}
           {SORT_LABELS[sort]}
