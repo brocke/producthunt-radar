@@ -35,10 +35,13 @@ function timeAgo(iso: string): string {
 
 export default async function PostDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { slug } = await params;
+  const { from } = await searchParams;
   const post = await getPostDetails(slug);
 
   if (!post) {
@@ -53,9 +56,9 @@ export default async function PostDetailPage({
   const inWatchlist = watchedIds.has(post.id);
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
       <nav className="mb-8 flex items-center justify-between text-sm">
-        <BackLink />
+        <BackLink from={from} />
         <a
           href={post.url}
           target="_blank"

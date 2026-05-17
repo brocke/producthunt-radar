@@ -48,7 +48,7 @@ export default async function WatchlistPage() {
             <li key={item.id}>
               <article className="relative">
                 <Link
-                  href={`/post/${item.slug}`}
+                  href={`/post/${item.slug}?from=watchlist`}
                   className="absolute inset-0 z-10 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label={`${item.name}${item.tagline ? `: ${item.tagline}` : ""}`}
                 />
