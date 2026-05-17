@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Aperture,
   Database,
   FileText,
   Filter,
@@ -22,6 +23,11 @@ import {
 
 const features = [
   {
+    icon: Aperture,
+    label: "Lenses — KI-Re-Ranking",
+    desc: "Beschreibe in einem Satz, wonach gefiltert werden soll. Claude bewertet jeden Post 0–10 und sortiert um. Drei Vorlagen (Workflow, Nachbau, Diskussion) als Startpunkt.",
+  },
+  {
     icon: Gauge,
     label: "Velocity-Ranking",
     desc: "Upvotes pro Stunde seit Launch — junge Wachstumssterne schlagen alte Schwergewichte.",
@@ -38,8 +44,8 @@ const features = [
   },
   {
     icon: Sparkles,
-    label: "KI-Zusammenfassung auf Knopfdruck",
-    desc: "3 Sätze zum Produkt aus deiner KI-Workshop-Brille — plus Stimmungsbild der Kommentare.",
+    label: "KI-Zusammenfassung pro Post",
+    desc: "Auf der Detail-Seite: 3 Sätze zum Produkt aus Workshop-Perspektive plus Stimmungsbild der Kommentare.",
   },
   {
     icon: FileText,
@@ -55,6 +61,7 @@ const features = [
 
 const phLimits = [
   "Keine transparente Velocity-Sortierung — nur Upvotes oder das interne Ranking",
+  "Kein KI-Re-Ranking nach eigenem freien Prompt",
   "Keine Wachstums-Historie pro Post (Sleeper-Hits bleiben unsichtbar)",
   "Keine personalisierte KI-Zusammenfassung mit deiner Brille",
   "Keine teilbaren Multi-Topic-Filter-URLs",

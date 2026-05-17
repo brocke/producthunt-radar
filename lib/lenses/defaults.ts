@@ -43,6 +43,22 @@ export function isDefaultLensKey(key: string): key is DefaultLensKey {
 }
 
 /**
+ * Returns the default lens key whose prompt exactly matches the given
+ * text (ignoring leading/trailing whitespace), or null. Used to keep
+ * cache hits when the user applies an unmodified default prompt.
+ */
+export function findMatchingDefaultLens(
+  prompt: string,
+): DefaultLensKey | null {
+  const trimmed = prompt.trim();
+  if (!trimmed) return null;
+  for (const key of DEFAULT_LENS_KEYS) {
+    if (DEFAULT_LENSES[key].prompt.trim() === trimmed) return key;
+  }
+  return null;
+}
+
+/**
  * Small, stable hash for custom lens prompts so we can cache scores per
  * (post_id, lens_key) without storing the full prompt in the key.
  * djb2 — fast, no Buffer/crypto dependency (Edge-safe just in case).
