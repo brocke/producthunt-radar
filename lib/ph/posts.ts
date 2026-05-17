@@ -15,10 +15,19 @@ import type {
   TodayPostsResponse,
 } from "./types";
 
-// Defensive ceiling on paginated fetches per order. At 20 posts/page and
-// ~30 posts/day on PH, 30 pages covers ~20 days — comfortable headroom
-// above our 14-day soft cap.
-const MAX_PAGES_PER_ORDER = 30;
+// Page count scales with the lookback range, but stays well clear of
+// PH's complexity-based rate limit (6250 / 15 min). Each `posts(...)`
+// call with topics(first:5) costs ~100 points; we run TWO orders
+// (VOTES + NEWEST) in parallel, so total cost = 2 × pages × 100. The
+// caps below keep the worst case (14 d, both orders) at ~4000 points,
+// leaving 35 %+ headroom for cron snapshots and lens-fetches that hit
+// the same budget.
+function maxPagesForRange(rangeHours: number): number {
+  if (rangeHours <= 24) return 5; //   ~100 posts/order
+  if (rangeHours <= 72) return 12; //  ~240 posts/order, ~3 days
+  if (rangeHours <= 168) return 15; // ~300 posts/order, ~7 days
+  return 20; //                       ~400 posts/order, up to 14 days
+}
 
 // Small inter-page delay to keep PH's Cloudflare layer from flagging
 // rapid pagination bursts as bot traffic. 150 ms is invisible to the user
@@ -28,16 +37,17 @@ const PAGE_DELAY_MS = 150;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Page through `posts(...)` until `hasNextPage` is false or the safety
- * ceiling kicks in. PH caps any single posts query at 20 results.
+ * Page through `posts(...)` until `hasNextPage` is false or the per-range
+ * safety ceiling kicks in. PH caps any single posts query at 20 results.
  */
 async function paginatePostsQuery(
   query: string,
   postedAfter: string,
+  maxPages: number,
 ): Promise<PHPost[]> {
   const out: PHPost[] = [];
   let after: string | undefined;
-  for (let page = 0; page < MAX_PAGES_PER_ORDER; page++) {
+  for (let page = 0; page < maxPages; page++) {
     if (page > 0) await sleep(PAGE_DELAY_MS);
     const r = await phRequest<TodayPostsResponse>(query, {
       postedAfter,
@@ -65,10 +75,11 @@ export async function getTodayPosts(rangeHours = 72): Promise<PHPost[]> {
   const postedAfter = new Date(
     Date.now() - rangeHours * 60 * 60 * 1000,
   ).toISOString();
+  const maxPages = maxPagesForRange(rangeHours);
 
   const [byVotes, byNewest] = await Promise.all([
-    paginatePostsQuery(TODAY_POSTS, postedAfter),
-    paginatePostsQuery(NEWEST_POSTS, postedAfter),
+    paginatePostsQuery(TODAY_POSTS, postedAfter, maxPages),
+    paginatePostsQuery(NEWEST_POSTS, postedAfter, maxPages),
   ]);
 
   const byId = new Map<string, PHPost>();
