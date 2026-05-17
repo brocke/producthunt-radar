@@ -22,6 +22,10 @@ function getClient(): GraphQLClient {
     _client = new GraphQLClient(PH_ENDPOINT, {
       headers: () => ({
         Authorization: `Bearer ${getToken()}`,
+        // Identify ourselves clearly — anonymous default UAs from
+        // graphql-request occasionally trip PH's Cloudflare bot
+        // protection, especially with paginated bursts.
+        "User-Agent": "ProductHunt-Radar/1.0 (+https://ph-radar.filbro.de)",
       }),
     });
   }

@@ -15,6 +15,10 @@ import type { PHPost } from "@/lib/ph/types";
 
 const MODEL = "claude-sonnet-4-6";
 const MAX_TOKENS = 6000;
+// At ~35 output tokens per post (score + ~100-char reason), MAX_TOKENS
+// comfortably fits ~150 posts in one Sonnet call. Beyond that we split
+// into batches so the output cap doesn't truncate the JSON array.
+const BATCH_SIZE = 120;
 
 const SYSTEM_PROMPT = `Du bewertest ProductHunt-Launches durch eine bestimmte Brille (Filter-Perspektive).
 Antworte ausschließlich als gültiges JSON-Array, ohne Markdown-Codefencing, ohne Einleitung.
@@ -116,6 +120,41 @@ async function callClaude(
   };
 }
 
+async function callClaudeBatched(
+  posts: PHPost[],
+  lensPrompt: string,
+): Promise<{
+  entries: Array<{ id: string; score: number; reason: string }>;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+}> {
+  if (posts.length <= BATCH_SIZE) {
+    return callClaude(posts, lensPrompt);
+  }
+  const allEntries: Array<{ id: string; score: number; reason: string }> = [];
+  let totalIn = 0;
+  let totalOut = 0;
+  let model = "";
+  // Sequential batches to stay well clear of Anthropic per-account rate
+  // limits, even with the wider 14-day range. The total wait scales
+  // linearly (~25 s per ~120-post batch with Sonnet).
+  for (let i = 0; i < posts.length; i += BATCH_SIZE) {
+    const chunk = posts.slice(i, i + BATCH_SIZE);
+    const r = await callClaude(chunk, lensPrompt);
+    allEntries.push(...r.entries);
+    totalIn += r.inputTokens;
+    totalOut += r.outputTokens;
+    model = r.model;
+  }
+  return {
+    entries: allEntries,
+    model,
+    inputTokens: totalIn,
+    outputTokens: totalOut,
+  };
+}
+
 export async function getScoresForLens(
   posts: PHPost[],
   lensKey: string,
@@ -142,10 +181,11 @@ export async function getScoresForLens(
   const missing = posts.filter((p) => !result.has(p.id));
   if (missing.length === 0) return result;
 
-  // 3) Batch the missing through Claude.
+  // 3) Batch the missing through Claude (splits into ~120-post chunks
+  // automatically when the lookback window is wide).
   let aiResult;
   try {
-    aiResult = await callClaude(missing, lensPrompt);
+    aiResult = await callClaudeBatched(missing, lensPrompt);
   } catch (err) {
     console.error("[lens] Claude scoring failed:", err);
     // Fall back to neutral score 5 with a placeholder reason — better than

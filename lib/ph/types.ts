@@ -29,6 +29,10 @@ export type PHPost = {
 export type TodayPostsResponse = {
   posts: {
     edges: Array<{ node: PHPost }>;
+    pageInfo?: {
+      hasNextPage: boolean;
+      endCursor: string | null;
+    };
   };
 };
 

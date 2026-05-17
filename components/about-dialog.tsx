@@ -26,7 +26,7 @@ import {
 const lensFeature = {
   icon: Aperture,
   label: "Lenses — KI-Re-Ranking nach freiem Prompt",
-  desc: "Beschreibe in ein, zwei Sätzen, wonach du im aktuellen Feed filtern willst — z.B. „Tools, die ich für KI-Workshops einsetzen kann“ oder „Konzepte, die ich in zwei Wochen nachbauen könnte“. Claude bewertet jeden Post auf einer Skala 0–10 und sortiert die Liste entsprechend um, mit 1-Satz-Begründung pro Treffer. Drei Vorlagen (Workflow, Nachbau, Signal) als Startpunkt, frei editierbar. Ergebnis pro Brille wird gecacht — eine bekannte Lens auf bekannte Posts kostet kein Token mehr.",
+  desc: "Beschreibe in ein, zwei Sätzen, wonach du im aktuellen Feed filtern willst — z.B. „Tools, die ich für KI-Workshops einsetzen kann“ oder „Konzepte, die ich in zwei Wochen nachbauen könnte“. Claude bewertet jeden Post auf einer Skala 0–10 und sortiert die Liste entsprechend um, mit 1-Satz-Begründung pro Treffer. Drei Vorlagen (Workflow, Nachbau, Signal) als Startpunkt, frei editierbar. Erstanwendung kostet ~2 ¢ pro 40 Posts (Sonnet 4.6) und dauert je nach Zeitraum 25–60 s; danach ist die Brille gecacht — eine bekannte Lens auf bekannte Posts kostet kein Token mehr.",
 };
 
 const features = [

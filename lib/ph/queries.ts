@@ -4,8 +4,8 @@
 import { gql } from "graphql-request";
 
 export const TODAY_POSTS = gql`
-  query TodayPosts($postedAfter: DateTime!) {
-    posts(first: 20, order: VOTES, postedAfter: $postedAfter) {
+  query TodayPosts($postedAfter: DateTime!, $after: String) {
+    posts(first: 20, order: VOTES, postedAfter: $postedAfter, after: $after) {
       edges {
         node {
           id
@@ -22,13 +22,14 @@ export const TODAY_POSTS = gql`
           }
         }
       }
+      pageInfo { hasNextPage endCursor }
     }
   }
 `;
 
 export const NEWEST_POSTS = gql`
-  query NewestPosts($postedAfter: DateTime!) {
-    posts(first: 20, order: NEWEST, postedAfter: $postedAfter) {
+  query NewestPosts($postedAfter: DateTime!, $after: String) {
+    posts(first: 20, order: NEWEST, postedAfter: $postedAfter, after: $after) {
       edges {
         node {
           id
@@ -45,6 +46,7 @@ export const NEWEST_POSTS = gql`
           }
         }
       }
+      pageInfo { hasNextPage endCursor }
     }
   }
 `;

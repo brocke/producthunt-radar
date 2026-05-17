@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AboutDialog } from "@/components/about-dialog";
 import { LensSelector } from "@/components/lens-selector";
 import { PostCard } from "@/components/post-card";
+import { RangeSelector } from "@/components/range-selector";
 import { SortControl } from "@/components/sort-control";
 import { TopicFilter } from "@/components/topic-filter";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { resolveLens } from "@/lib/lenses/defaults";
 import { getScoresForLens, type LensScoreMap } from "@/lib/lenses/run";
 import { getTodayPosts } from "@/lib/ph/posts";
 import type { PHPost } from "@/lib/ph/types";
+import { parseRangeKey, RANGE_HOURS, RANGE_INLINE } from "@/lib/range";
 import {
   filterByTopics,
   parseSortKey,
@@ -43,14 +45,16 @@ export default async function HomePage({
     topics?: string;
     lens?: string;
     q?: string;
+    range?: string;
   }>;
 }) {
   const params = await searchParams;
   const sort = parseSortKey(params.sort);
   const selectedTopicSlugs = parseTopicSlugs(params.topics);
   const lens = resolveLens(params.lens, params.q);
+  const range = parseRangeKey(params.range);
 
-  const allPosts = await getTodayPosts();
+  const allPosts = await getTodayPosts(RANGE_HOURS[range]);
   const watchedIds = getWatchlistIds();
   const filtered = filterByTopics(allPosts, selectedTopicSlugs);
 
@@ -76,10 +80,10 @@ export default async function HomePage({
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {lens
-              ? `${visible.length} launches, neu sortiert durch Lens: ${lens.label}.`
+              ? `${visible.length} Launches aus den ${RANGE_INLINE[range]}, neu sortiert durch Lens: ${lens.label}.`
               : visible.length === allPosts.length
-                ? `${allPosts.length} launches from the last 36 hours.`
-                : `${visible.length} of ${allPosts.length} launches match your filters.`}
+                ? `${allPosts.length} Launches aus den ${RANGE_INLINE[range]}.`
+                : `${visible.length} von ${allPosts.length} Launches aus den ${RANGE_INLINE[range]} passen zu deinen Filtern.`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -109,6 +113,7 @@ export default async function HomePage({
       </header>
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
+        <RangeSelector />
         <SortControl />
         <TopicFilter topics={topics} />
       </div>
