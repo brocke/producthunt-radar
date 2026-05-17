@@ -1,6 +1,7 @@
-import { ArrowLeft, ArrowUp, ExternalLink, MessageSquare } from "lucide-react";
+import { ArrowUp, ExternalLink, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
+import { BackLink } from "@/components/back-link";
 import { Badge } from "@/components/ui/badge";
 import { DigestActions } from "@/components/digest-actions";
 import { generateDailyDigest } from "@/lib/digest/generate";
@@ -19,14 +20,8 @@ export default async function DigestPage() {
   const filename = `producthunt-digest-${dateStr}.md`;
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-      <Link
-        href="/"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Back to feed
-      </Link>
+    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+      <BackLink className="mb-6" />
 
       <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -34,14 +29,20 @@ export default async function DigestPage() {
             Daily Digest
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Yesterday&apos;s top {digest.entries.length} launches by velocity, with
-            Claude summaries.
+            Die Top {digest.entries.length} Launches von gestern, sortiert nach
+            Velocity, mit KI-Zusammenfassungen.
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {digest.stats.cachedSummaries} cached · {digest.stats.freshSummaries}{" "}
-            freshly generated
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Velocity = Upvotes pro Stunde seit Launch — junge Wachstumssterne
+            schlagen alte Schwergewichte. Der Digest betrachtet das Fenster von
+            gestern (12–48 h zurück), damit der Tag vollständig abgeschlossen
+            ist.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {digest.stats.cachedSummaries} aus dem Cache ·{" "}
+            {digest.stats.freshSummaries} frisch erzeugt
             {digest.stats.missingSummaries > 0
-              ? ` · ${digest.stats.missingSummaries} unavailable`
+              ? ` · ${digest.stats.missingSummaries} nicht verfügbar`
               : ""}
           </p>
         </div>
@@ -52,8 +53,9 @@ export default async function DigestPage() {
 
       {digest.entries.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No qualifying posts in yesterday&apos;s 12-48h window yet. Try again
-          tomorrow — the cron job will keep gathering data.
+          Keine passenden Posts im Gestern-Fenster (12–48 h zurück) gefunden.
+          Versuch's morgen nochmal — der Cron-Job sammelt im Hintergrund
+          weiter Daten.
         </p>
       ) : (
         <ol className="flex flex-col gap-8">
