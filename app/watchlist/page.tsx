@@ -1,6 +1,7 @@
-import { ArrowLeft, ExternalLink, Star } from "lucide-react";
+import { ExternalLink, Star } from "lucide-react";
 import Link from "next/link";
 
+import { BackLink } from "@/components/back-link";
 import { Card } from "@/components/ui/card";
 import { WatchlistButton } from "@/components/watchlist-button";
 import { getWatchlist } from "@/lib/watchlist/queries";
@@ -22,14 +23,8 @@ export default async function WatchlistPage() {
   const items = getWatchlist();
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-      <Link
-        href="/"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Back to feed
-      </Link>
+    <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+      <BackLink className="mb-6" />
 
       <header className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight">Watchlist</h1>

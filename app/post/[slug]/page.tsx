@@ -1,12 +1,25 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUp, ExternalLink, MessageSquare } from "lucide-react";
+import { ArrowUp, ExternalLink, MessageSquare } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { BackLink } from "@/components/back-link";
 import { SummaryPanel } from "@/components/summary-panel";
+import { WatchlistButton } from "@/components/watchlist-button";
+import { Badge } from "@/components/ui/badge";
 import { getCachedSummary } from "@/lib/ai/queries";
 import { sanitizeRichText } from "@/lib/format/rich-text";
 import { getPostDetails } from "@/lib/ph/posts";
+import { getWatchlistIds } from "@/lib/watchlist/queries";
+
+/**
+ * Validates a PH username so we don't generate broken profile URLs for
+ * anonymised accounts (e.g. PH returns "[REDACTED]" for some brand-new
+ * launches before the maker reveals themselves). Real usernames are
+ * alphanumeric plus optional dashes/underscores.
+ */
+function isValidPHUsername(username: string | null | undefined): boolean {
+  if (!username) return false;
+  return /^[a-zA-Z0-9_-]+$/.test(username);
+}
 
 // Detail pages change less often than the feed — cache for 30 minutes.
 export const revalidate = 1800;
@@ -36,17 +49,13 @@ export default async function PostDetailPage({
   const comments = post.comments.edges.map((e) => e.node);
   const launchedAt = post.featuredAt ?? post.createdAt;
   const cachedSummary = getCachedSummary(post.id);
+  const watchedIds = getWatchlistIds();
+  const inWatchlist = watchedIds.has(post.id);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
       <nav className="mb-8 flex items-center justify-between text-sm">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" aria-hidden />
-          Back to feed
-        </Link>
+        <BackLink />
         <a
           href={post.url}
           target="_blank"
@@ -70,9 +79,21 @@ export default async function PostDetailPage({
           <div className="size-20 flex-shrink-0 rounded-lg bg-muted sm:size-24" />
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            {post.name}
-          </h1>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              {post.name}
+            </h1>
+            <WatchlistButton
+              post={{
+                phPostId: post.id,
+                slug: post.slug,
+                name: post.name,
+                tagline: post.tagline,
+                thumbnailUrl: post.thumbnail?.url ?? null,
+              }}
+              initialActive={inWatchlist}
+            />
+          </div>
           <p className="text-base text-muted-foreground">{post.tagline}</p>
           {topics.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
@@ -92,7 +113,7 @@ export default async function PostDetailPage({
 
       <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
         <span className="inline-flex items-center gap-1 text-foreground">
-          <ArrowUp className="size-4" aria-hidden />
+          <ArrowUp className="size-4 text-brand" aria-hidden />
           <span className="font-semibold tabular-nums">{post.votesCount}</span>
           <span className="text-muted-foreground">votes</span>
         </span>
@@ -120,14 +141,18 @@ export default async function PostDetailPage({
           By{" "}
           {post.makers.map((m, i) => (
             <span key={m.id}>
-              <a
-                href={`https://www.producthunt.com/@${m.username}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground transition-colors hover:underline"
-              >
-                {m.name}
-              </a>
+              {isValidPHUsername(m.username) ? (
+                <a
+                  href={`https://www.producthunt.com/@${m.username}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-foreground transition-colors hover:underline"
+                >
+                  {m.name}
+                </a>
+              ) : (
+                <span className="text-foreground">{m.name}</span>
+              )}
               {i < post.makers.length - 1 ? ", " : ""}
             </span>
           ))}
@@ -164,18 +189,26 @@ export default async function PostDetailPage({
           <p className="text-sm text-muted-foreground">No comments yet.</p>
         ) : (
           <ul className="flex flex-col gap-5">
-            {comments.map((c) => (
+            {comments.map((c) => {
+              const userValid = isValidPHUsername(c.user.username);
+              return (
               <li key={c.id} className="flex flex-col gap-1.5">
                 <div className="flex items-baseline gap-2 text-xs text-muted-foreground">
-                  <a
-                    href={`https://www.producthunt.com/@${c.user.username}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-foreground transition-colors hover:underline"
-                  >
-                    {c.user.name}
-                  </a>
-                  <span>@{c.user.username}</span>
+                  {userValid ? (
+                    <a
+                      href={`https://www.producthunt.com/@${c.user.username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-foreground transition-colors hover:underline"
+                    >
+                      {c.user.name}
+                    </a>
+                  ) : (
+                    <span className="text-sm font-medium text-foreground">
+                      {c.user.name}
+                    </span>
+                  )}
+                  {userValid && <span>@{c.user.username}</span>}
                   <span>·</span>
                   <span>{timeAgo(c.createdAt)}</span>
                   <span className="ml-auto inline-flex items-center gap-1">
@@ -190,7 +223,8 @@ export default async function PostDetailPage({
                   }}
                 />
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </section>

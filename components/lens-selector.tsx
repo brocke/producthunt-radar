@@ -168,7 +168,7 @@ export function LensSelector() {
           )}
           {hasLens && isDirty && (
             <span className="text-xs italic text-muted-foreground">
-              Geändert — „Anwenden" für neue Sortierung.
+              „Anwenden" für neue Sortierung.
             </span>
           )}
           {!hasLens && draft.trim().length > 0 && (
