@@ -21,12 +21,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+// The big-ticket feature gets a hero row below; everything else lives in
+// the two-column grid.
+const lensFeature = {
+  icon: Aperture,
+  label: "Lenses — KI-Re-Ranking nach freiem Prompt",
+  desc: "Beschreibe in ein, zwei Sätzen, wonach du im aktuellen Feed filtern willst — z.B. „Tools, die ich für KI-Workshops einsetzen kann“ oder „Konzepte, die ich in zwei Wochen nachbauen könnte“. Claude bewertet jeden Post auf einer Skala 0–10 und sortiert die Liste entsprechend um, mit 1-Satz-Begründung pro Treffer. Drei Vorlagen (Workflow, Nachbau, Diskussion) als Startpunkt, frei editierbar. Ergebnis pro Brille wird gecacht — eine bekannte Lens auf bekannte Posts kostet kein Token mehr.",
+};
+
 const features = [
-  {
-    icon: Aperture,
-    label: "Lenses — KI-Re-Ranking",
-    desc: "Beschreibe in einem Satz, wonach gefiltert werden soll. Claude bewertet jeden Post 0–10 und sortiert um. Drei Vorlagen (Workflow, Nachbau, Diskussion) als Startpunkt.",
-  },
   {
     icon: Gauge,
     label: "Velocity-Ranking",
@@ -55,18 +58,17 @@ const features = [
   {
     icon: Database,
     label: "Snapshots alle 6 Stunden",
-    desc: "Datensammlung im Hintergrund. Basis für Trend-Charts und Sleeper-Hit-Erkennung.",
+    desc: "Datensammlung im Hintergrund. Basis für künftige Trend-Charts.",
   },
 ];
 
 const phLimits = [
   "Keine transparente Velocity-Sortierung — nur Upvotes oder das interne Ranking",
   "Kein KI-Re-Ranking nach eigenem freien Prompt",
-  "Keine Wachstums-Historie pro Post (Sleeper-Hits bleiben unsichtbar)",
   "Keine personalisierte KI-Zusammenfassung mit deiner Brille",
   "Keine teilbaren Multi-Topic-Filter-URLs",
-  "Keine private Merkliste mit eigenen Notizen",
-  "Kein Markdown-Export, kein Datenzugriff für eigene Auswertungen",
+  "Keine private Merkliste außerhalb des PH-Accounts",
+  "Kein Markdown-Export für eigene Newsletter",
 ];
 
 export function AboutDialog() {
@@ -89,9 +91,10 @@ export function AboutDialog() {
             Warum es das gibt
           </DialogTitle>
           <DialogDescription>
-            Ein persönliches Product-Hunt-Dashboard mit Geschwindigkeits-Ranking,
-            KI-Verdichtung und einem wachsenden Daten-Pool — Dinge, die die
-            Product-Hunt-Website selbst nicht hergibt.
+            Ein persönliches Product-Hunt-Dashboard mit Velocity-Ranking,
+            freiem KI-Filter (Lenses), eigener Watchlist und einem
+            wachsenden Daten-Pool — Dinge, die die Product-Hunt-Website
+            selbst nicht hergibt.
           </DialogDescription>
         </DialogHeader>
 
@@ -99,6 +102,30 @@ export function AboutDialog() {
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Was es kann
           </h3>
+
+          {/* Hero row for the standout feature, with a soft brand accent. */}
+          {(() => {
+            const LensIcon = lensFeature.icon;
+            return (
+              <div className="rounded-lg border border-brand/30 bg-brand/5 px-4 py-3">
+                <div className="flex gap-3">
+                  <LensIcon
+                    className="mt-0.5 size-5 shrink-0 text-brand"
+                    aria-hidden
+                  />
+                  <div>
+                    <div className="text-sm font-semibold leading-tight">
+                      {lensFeature.label}
+                    </div>
+                    <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                      {lensFeature.desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           <ul className="grid gap-3 sm:grid-cols-2">
             {features.map(({ icon: Icon, label, desc }) => (
               <li key={label} className="flex gap-3">

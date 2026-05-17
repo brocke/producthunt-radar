@@ -132,7 +132,7 @@ export function LensSelector() {
           placeholder="Beschreibe in ein, zwei Sätzen, wonach gefiltert werden soll — oder wähle eine Vorlage oben."
           disabled={isPending}
           className={cn(
-            "w-full rounded-md border border-input bg-background px-3 py-2 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 disabled:opacity-100",
+            "w-full rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 disabled:opacity-100",
             isPending && "border-foreground/40 ring-2 ring-foreground/15",
           )}
           rows={5}
@@ -147,6 +147,17 @@ export function LensSelector() {
             }
           }}
         />
+        {draft.length > 0 && !isPending && (
+          <button
+            type="button"
+            onClick={() => setDraft("")}
+            aria-label="Textfeld leeren"
+            title="Textfeld leeren"
+            className="absolute right-2 top-2 inline-flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-3.5" aria-hidden />
+          </button>
+        )}
         {isPending && (
           <div
             className="pointer-events-none absolute inset-0 rounded-md bg-background/30 backdrop-blur-[1px]"
@@ -166,7 +177,7 @@ export function LensSelector() {
                 : "Eigener Prompt"}
             </span>
           )}
-          {hasLens && isDirty && (
+          {hasLens && isDirty && draft.trim().length >= 3 && (
             <span className="text-xs italic text-muted-foreground">
               „Anwenden" für neue Sortierung.
             </span>
