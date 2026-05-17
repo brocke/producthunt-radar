@@ -29,6 +29,13 @@
       "when": 1778893200000,
       "tag": "0003_lens_scores",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1778997600000,
+      "tag": "0004_lens_prompts_v2",
+      "breakpoints": true
     }
   ]
 }

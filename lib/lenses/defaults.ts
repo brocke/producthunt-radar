@@ -3,7 +3,7 @@
 // extend this with an ad-hoc free-text prompt the user types into the
 // "Custom..." modal.
 
-export type DefaultLensKey = "workflow" | "replicate" | "discuss";
+export type DefaultLensKey = "workflow" | "replicate" | "signal";
 
 export type LensDef = {
   key: DefaultLensKey;
@@ -18,21 +18,21 @@ export const DEFAULT_LENSES: Record<DefaultLensKey, LensDef> = {
     label: "Workflow",
     description: "Tools, die ich für meinen Arbeitsalltag (KI-Entwicklung, Workshops, Coaching, Beratung) einsetzen kann.",
     prompt:
-      "Bewerte, wie nützlich dieses Tool für jemanden ist, der KI-Anwendungen baut, Workshops und Coaching anbietet und nach Tools für den eigenen Arbeitsfluss sucht. Hoher Score (8–10) bei: direkter Workflow-Nutzen, sofort einsetzbar, klares Use Case für Kreativ-, Wissens- oder KI-Arbeit. Mittlerer Score (4–7) bei: indirekt nützlich, gehört in den breiteren KI-Tool-Kosmos. Niedriger Score (0–3) bei: hochspezielle B2B-Nische, reines Entertainment, technische Spielereien ohne Anwendungsbezug.",
+      "Ich arbeite täglich mit KI-Tools im Berufsalltag (KI-Entwicklung, Workshops, Coaching). Bewerte, wie offensichtlich nützlich dieses Tool für meinen Workflow ist. Hoch: schnell zugänglich, klarer Mehrwert, hilft bei wiederkehrenden Aufgaben, „das würde ich sofort ausprobieren“. Niedrig: zu nischig, zu komplex zum Reinkommen, oder unklar, was es konkret bringt.",
   },
   replicate: {
     key: "replicate",
     label: "Nachbau",
     description: "Konzepte, die als Vorlage zum eigenen Nachbauen taugen.",
     prompt:
-      "Bewerte, wie gut sich das Konzept dieses Tools als Vorlage zum eigenen Nachbauen oder als Lern-/Inspirationsbeispiel eignet. Hoher Score (8–10) bei: klar umrissene Idee, überschaubarer technischer Stack, in 2 Wochen replizierbar, gute Lehrwirkung. Mittlerer Score (4–7) bei: interessantes Konzept, aber Aufwand oder spezielle Daten nötig. Niedriger Score (0–3) bei: massive proprietäre Datenmengen, jahrelanges Modell-Training, breite Branchen-Anpassung nötig.",
+      "Ich baue mit Claude Code gerne eigene kleine Tools, wenn ich einen ähnlichen Use Case habe. Bewerte, wie gut sich das Konzept dieses Tools als Vorlage zum Selber-Bauen eignet. Hoch: überschaubare Idee, technisch greifbar, gutes Lehrbeispiel. Niedrig: nur mit großen Datenmengen, langem Modell-Training oder Spezialwissen sinnvoll replizierbar.",
   },
-  discuss: {
-    key: "discuss",
-    label: "Diskussion",
-    description: "Strategisch oder kulturell interessante Launches mit Gesprächswert.",
+  signal: {
+    key: "signal",
+    label: "Signal",
+    description: "Launches, die ein interessantes Signal senden — strategisch, kulturell oder technisch.",
     prompt:
-      "Bewerte, wie interessant dieses Tool als Diskussions- oder Strategie-Anlass ist. Hoher Score (8–10) bei: kontroverse oder zukunftsrelevante Konzepte, ungewöhnliche Ansätze, kulturell auffällig, ethische Fragen, klares Branchen-Signal. Mittlerer Score (4–7) bei: leichter Twist, aber nicht überraschend. Niedriger Score (0–3) bei: x-tes Tool im selben Segment, reine Inkrement-Updates, kein neuer Gedanke.",
+      "Ich beobachte, wo sich die KI-Landschaft hinbewegt. Bewerte, wie stark dieses Tool ein interessantes Signal sendet — kontrovers, ungewöhnlich, technisch neuartig, strategisch relevant, zukunftsgerichtet. Hoch: hier passiert was Neues. Niedrig: x-tes Tool im selben Muster, reines Inkrement-Update, austauschbar.",
   },
 };
 
@@ -75,17 +75,21 @@ export function customLensKey(prompt: string): string {
 /**
  * Resolve a (lensKey, customPrompt?) pair from URL params into a concrete
  * prompt and a cache key. Returns null if the inputs are invalid.
+ *
+ * Backwards-compat: the old "discuss" key is mapped to "signal" so any
+ * bookmarked ?lens=discuss URLs keep working after the rename in KOE-357.
  */
 export function resolveLens(
   lensParam: string | undefined,
   customPrompt: string | undefined,
 ): { key: string; prompt: string; label: string } | null {
   if (!lensParam) return null;
-  if (isDefaultLensKey(lensParam)) {
-    const def = DEFAULT_LENSES[lensParam];
+  const normalized = lensParam === "discuss" ? "signal" : lensParam;
+  if (isDefaultLensKey(normalized)) {
+    const def = DEFAULT_LENSES[normalized];
     return { key: def.key, prompt: def.prompt, label: def.label };
   }
-  if (lensParam === "custom" && customPrompt) {
+  if (normalized === "custom" && customPrompt) {
     const cleaned = customPrompt.trim();
     if (cleaned.length < 3) return null;
     return {
