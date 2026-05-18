@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { ListFilter } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/popover";
 import { parseTopicSlugs } from "@/lib/scoring";
 import type { PHTopic } from "@/lib/ph/types";
+import { useTransitionHeartbeat } from "@/lib/use-transition-heartbeat";
 
 export function TopicFilter({ topics }: { topics: PHTopic[] }) {
   const router = useRouter();
@@ -19,6 +21,8 @@ export function TopicFilter({ topics }: { topics: PHTopic[] }) {
   const selected = new Set(
     parseTopicSlugs(searchParams.get("topics") ?? undefined),
   );
+  const [isPending, startTransition] = useTransition();
+  const elapsedSeconds = useTransitionHeartbeat(isPending);
 
   function applyTopics(next: Set<string>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -28,7 +32,9 @@ export function TopicFilter({ topics }: { topics: PHTopic[] }) {
       params.set("topics", Array.from(next).join(","));
     }
     const qs = params.toString();
-    router.push(qs ? `/?${qs}` : "/", { scroll: false });
+    startTransition(() => {
+      router.push(qs ? `/?${qs}` : "/", { scroll: false });
+    });
   }
 
   function toggle(slug: string) {
@@ -44,12 +50,19 @@ export function TopicFilter({ topics }: { topics: PHTopic[] }) {
 
   return (
     <Popover>
-      <PopoverTrigger render={<Button variant="outline" className="gap-1.5" />}>
+      <PopoverTrigger
+        render={<Button variant="outline" className="gap-1.5" disabled={isPending} />}
+      >
         <ListFilter className="size-4" aria-hidden />
         Topics
-        {selected.size > 0 && (
+        {selected.size > 0 && !isPending && (
           <span className="ml-1 rounded-full bg-foreground px-1.5 text-xs font-medium text-background">
             {selected.size}
+          </span>
+        )}
+        {isPending && (
+          <span className="ml-1 text-muted-foreground tabular-nums">
+            · {elapsedSeconds}s
           </span>
         )}
       </PopoverTrigger>

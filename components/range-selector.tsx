@@ -16,7 +16,7 @@ import {
   RANGE_LABELS,
   type RangeKey,
 } from "@/lib/range";
-import { cn } from "@/lib/utils";
+import { useTransitionHeartbeat } from "@/lib/use-transition-heartbeat";
 
 export function RangeSelector() {
   const router = useRouter();
@@ -24,6 +24,7 @@ export function RangeSelector() {
   const fromUrl = parseRangeKey(searchParams.get("range") ?? undefined);
   const [isPending, startTransition] = useTransition();
   const [range, setOptimisticRange] = useOptimistic(fromUrl);
+  const elapsedSeconds = useTransitionHeartbeat(isPending);
 
   function handleChange(value: string | null) {
     if (!value) return;
@@ -43,13 +44,16 @@ export function RangeSelector() {
 
   return (
     <Select value={range} onValueChange={handleChange} disabled={isPending}>
-      <SelectTrigger
-        className={cn("w-[150px]", isPending && "animate-pulse")}
-        aria-label="Zeitraum wählen"
-      >
+      <SelectTrigger className="w-[170px]" aria-label="Zeitraum wählen">
         <span>
           <span className="text-muted-foreground">Zeitraum:</span>{" "}
           {RANGE_LABELS[range]}
+          {isPending && (
+            <span className="text-muted-foreground tabular-nums">
+              {" · "}
+              {elapsedSeconds}s
+            </span>
+          )}
         </span>
       </SelectTrigger>
       <SelectContent>

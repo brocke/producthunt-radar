@@ -10,6 +10,7 @@ import {
   DEFAULT_LENS_KEYS,
   findMatchingDefaultLens,
 } from "@/lib/lenses/defaults";
+import { useTransitionHeartbeat } from "@/lib/use-transition-heartbeat";
 import { cn } from "@/lib/utils";
 
 /**
@@ -39,25 +40,7 @@ export function LensSelector() {
 
   const [optimisticActive, setOptimisticActive] = useOptimistic(activePrompt);
 
-  // Visible elapsed-seconds counter while a lens is scoring. The setInterval
-  // doubles as a heartbeat for React's concurrent scheduler — without a
-  // periodic state update, a finished server transition can sit waiting
-  // for the next user input before being committed, which felt like a
-  // hang ("page only updates when I click somewhere"). Ticking once a
-  // second keeps the scheduler awake.
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  useEffect(() => {
-    if (!isPending) {
-      setElapsedSeconds(0);
-      return;
-    }
-    const startedAt = Date.now();
-    setElapsedSeconds(0);
-    const id = setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [isPending]);
+  const elapsedSeconds = useTransitionHeartbeat(isPending);
 
   // When activePrompt changes (e.g. after Apply settles or external nav),
   // sync the draft so the field stays consistent with what's actually

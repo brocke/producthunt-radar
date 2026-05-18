@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useOptimistic } from "react";
+import { useOptimistic, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -15,6 +15,7 @@ import {
   SORT_LABELS,
   type SortKey,
 } from "@/lib/scoring";
+import { useTransitionHeartbeat } from "@/lib/use-transition-heartbeat";
 
 export function SortControl() {
   const router = useRouter();
@@ -28,6 +29,8 @@ export function SortControl() {
   // KOE-351. Reflecting the click locally keeps the controlled value in
   // sync with the user's intent before the URL updates.
   const [sort, setOptimisticSort] = useOptimistic(fromUrl);
+  const [isPending, startTransition] = useTransition();
+  const elapsedSeconds = useTransitionHeartbeat(isPending);
 
   function handleChange(value: string | null) {
     if (!value) return;
@@ -46,7 +49,11 @@ export function SortControl() {
   }
 
   return (
-    <Select value={sort} onValueChange={handleChange} disabled={lensActive}>
+    <Select
+      value={sort}
+      onValueChange={handleChange}
+      disabled={lensActive || isPending}
+    >
       <SelectTrigger
         className="w-[170px]"
         aria-label="Sort posts"
@@ -55,6 +62,12 @@ export function SortControl() {
         <span>
           <span className="text-muted-foreground">Sort:</span>{" "}
           {SORT_LABELS[sort]}
+          {isPending && (
+            <span className="text-muted-foreground tabular-nums">
+              {" · "}
+              {elapsedSeconds}s
+            </span>
+          )}
         </span>
       </SelectTrigger>
       <SelectContent>
