@@ -7,7 +7,7 @@
 export const RANGE_KEYS = ["24h", "3d"] as const;
 export type RangeKey = (typeof RANGE_KEYS)[number];
 
-export const DEFAULT_RANGE: RangeKey = "3d";
+export const DEFAULT_RANGE: RangeKey = "24h";
 
 export const RANGE_LABELS: Record<RangeKey, string> = {
   "24h": "24 h",
