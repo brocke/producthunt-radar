@@ -1,6 +1,8 @@
 // High-level functions to fetch ProductHunt posts.
 // Server-side only — relies on PH_TOKEN being available in process.env.
 
+import { unstable_cache } from "next/cache";
+
 import { phRequest } from "./client";
 import {
   NEWEST_POSTS,
@@ -61,17 +63,7 @@ async function paginatePostsQuery(
   return out;
 }
 
-/**
- * Fetch the feed for a given lookback window (hours).
- * PH's GraphQL API caps any single posts query at 20 results. Asking only
- * for `order: VOTES` returns the 20 most-upvoted posts of the window —
- * brand-new launches with few votes get cut off. Asking only for
- * `order: NEWEST` would drop the established hits. So we paginate both
- * orders in parallel and merge by id, keeping each post's latest fields.
- *
- * `rangeHours` defaults to 72 (3 days) — see `lib/range.ts`.
- */
-export async function getTodayPosts(rangeHours = 72): Promise<PHPost[]> {
+async function fetchTodayPosts(rangeHours: number): Promise<PHPost[]> {
   const postedAfter = new Date(
     Date.now() - rangeHours * 60 * 60 * 1000,
   ).toISOString();
@@ -90,6 +82,30 @@ export async function getTodayPosts(rangeHours = 72): Promise<PHPost[]> {
 
   return Array.from(byId.values());
 }
+
+/**
+ * Fetch the feed for a given lookback window (hours).
+ * PH's GraphQL API caps any single posts query at 20 results. Asking only
+ * for `order: VOTES` returns the 20 most-upvoted posts of the window —
+ * brand-new launches with few votes get cut off. Asking only for
+ * `order: NEWEST` would drop the established hits. So we paginate both
+ * orders in parallel and merge by id, keeping each post's latest fields.
+ *
+ * Wrapped in `unstable_cache` so topic-filter / sort / lens changes (which
+ * all rebuild the page with a different URL signature) hit a shared cache
+ * instead of triggering a fresh paginated fetch each time — that was
+ * sending us straight into PH's 6250 / 15-min complexity-budget wall.
+ *
+ * Cache TTL is 30 min and keyed only by rangeHours, so independent users
+ * (and the same user across topic/sort clicks) all share the same fetch.
+ *
+ * `rangeHours` defaults to 72 (3 days) — see `lib/range.ts`.
+ */
+export const getTodayPosts = unstable_cache(
+  (rangeHours = 72) => fetchTodayPosts(rangeHours),
+  ["ph-today-posts"],
+  { revalidate: 1800, tags: ["ph-today-posts"] },
+);
 
 /**
  * Fetch full details for a single post by slug.
