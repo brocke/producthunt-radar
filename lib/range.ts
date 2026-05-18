@@ -1,18 +1,17 @@
-// Range = how far back to fetch from ProductHunt. 14 days is the soft cap —
-// beyond that the post count becomes unwieldy in the UI and the lens-scoring
-// cost climbs linearly. For deeper history, use the snapshot archive (see
-// plan.md §10 "Später").
+// Range = how far back to fetch from ProductHunt. Capped at 3 days because
+// PH's complexity-based rate limit (6250 / 15 min) gets pressured fast with
+// repeated user clicks + the cron snapshot job on the same budget, and the
+// UX of waiting 20+ s per range switch was poor. For deeper history, switch
+// the feed to read from the snapshots DB (see plan.md §10 "Später").
 
-export const RANGE_KEYS = ["24h", "3d", "7d", "14d"] as const;
+export const RANGE_KEYS = ["24h", "3d"] as const;
 export type RangeKey = (typeof RANGE_KEYS)[number];
 
 export const DEFAULT_RANGE: RangeKey = "3d";
 
 export const RANGE_LABELS: Record<RangeKey, string> = {
-  "24h": "Letzte 24 h",
-  "3d": "Letzte 3 Tage",
-  "7d": "Letzte 7 Tage",
-  "14d": "Letzte 14 Tage",
+  "24h": "24 h",
+  "3d": "3 Tage",
 };
 
 /**
@@ -22,15 +21,11 @@ export const RANGE_LABELS: Record<RangeKey, string> = {
 export const RANGE_INLINE: Record<RangeKey, string> = {
   "24h": "letzten 24 Stunden",
   "3d": "letzten 3 Tagen",
-  "7d": "letzten 7 Tagen",
-  "14d": "letzten 14 Tagen",
 };
 
 export const RANGE_HOURS: Record<RangeKey, number> = {
   "24h": 24,
   "3d": 72,
-  "7d": 168,
-  "14d": 336,
 };
 
 export function parseRangeKey(raw: string | undefined): RangeKey {

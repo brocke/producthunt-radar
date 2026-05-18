@@ -41,7 +41,7 @@ export function RangeSelector() {
 
   return (
     <Select value={range} onValueChange={handleChange}>
-      <SelectTrigger className="w-[180px]" aria-label="Zeitraum wählen">
+      <SelectTrigger className="w-[150px]" aria-label="Zeitraum wählen">
         <span>
           <span className="text-muted-foreground">Zeitraum:</span>{" "}
           {RANGE_LABELS[range]}
