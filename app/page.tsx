@@ -61,11 +61,27 @@ export default async function HomePage({
   // When a lens is active, re-rank by Claude scores (and dim low-scorers
   // in PostCard via the `lens` prop). Otherwise fall back to the regular
   // sort dropdown.
+  //
+  // Lens scoring is capped at the LENS_CAP top posts by votes — beyond
+  // that the signal-to-noise ratio drops fast (the tail is mostly
+  // low-engagement launches), and the initial Sonnet pass would stretch
+  // past the Caddy proxy timeout.
+  const LENS_CAP = 200;
   let lensScores: LensScoreMap | null = null;
   let visible: PHPost[];
+  let lensCappedFrom: number | null = null;
   if (lens) {
-    lensScores = await getScoresForLens(filtered, lens.key, lens.prompt);
-    visible = sortByLensScore(filtered, lensScores);
+    const candidates =
+      filtered.length > LENS_CAP
+        ? [...filtered]
+            .sort((a, b) => b.votesCount - a.votesCount)
+            .slice(0, LENS_CAP)
+        : filtered;
+    if (filtered.length > LENS_CAP) {
+      lensCappedFrom = filtered.length;
+    }
+    lensScores = await getScoresForLens(candidates, lens.key, lens.prompt);
+    visible = sortByLensScore(candidates, lensScores);
   } else {
     visible = sortPosts(filtered, sort);
   }
@@ -80,7 +96,9 @@ export default async function HomePage({
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {lens
-              ? `${visible.length} Launches aus den ${RANGE_INLINE[range]}, neu sortiert durch Lens: ${lens.label}.`
+              ? lensCappedFrom
+                ? `Top ${visible.length} von ${lensCappedFrom} Launches aus den ${RANGE_INLINE[range]}, neu sortiert durch Lens: ${lens.label}.`
+                : `${visible.length} Launches aus den ${RANGE_INLINE[range]}, neu sortiert durch Lens: ${lens.label}.`
               : visible.length === allPosts.length
                 ? `${allPosts.length} Launches aus den ${RANGE_INLINE[range]}.`
                 : `${visible.length} von ${allPosts.length} Launches aus den ${RANGE_INLINE[range]} passen zu deinen Filtern.`}
