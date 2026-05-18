@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useOptimistic } from "react";
+import { useOptimistic, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -16,11 +16,13 @@ import {
   RANGE_LABELS,
   type RangeKey,
 } from "@/lib/range";
+import { cn } from "@/lib/utils";
 
 export function RangeSelector() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fromUrl = parseRangeKey(searchParams.get("range") ?? undefined);
+  const [isPending, startTransition] = useTransition();
   const [range, setOptimisticRange] = useOptimistic(fromUrl);
 
   function handleChange(value: string | null) {
@@ -40,8 +42,11 @@ export function RangeSelector() {
   }
 
   return (
-    <Select value={range} onValueChange={handleChange}>
-      <SelectTrigger className="w-[150px]" aria-label="Zeitraum wählen">
+    <Select value={range} onValueChange={handleChange} disabled={isPending}>
+      <SelectTrigger
+        className={cn("w-[150px]", isPending && "animate-pulse")}
+        aria-label="Zeitraum wählen"
+      >
         <span>
           <span className="text-muted-foreground">Zeitraum:</span>{" "}
           {RANGE_LABELS[range]}

@@ -67,6 +67,23 @@ function logRateLimit(info: RateLimit) {
 let lastKnownRemaining: number | null = null;
 let lastKnownResetSeconds: number | null = null;
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function isRetryableError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const msg = err.message.toLowerCase();
+  // Transient network / proxy hiccups. NOT 429 (rate limit) or 4xx — those
+  // would just burn another request without helping.
+  return (
+    msg.includes("network error") ||
+    msg.includes("fetch failed") ||
+    msg.includes("econnreset") ||
+    msg.includes("etimedout") ||
+    /code: 5\d\d/.test(msg) ||
+    /code: 408/.test(msg)
+  );
+}
+
 export async function phRequest<TData>(
   query: string,
   variables?: Record<string, unknown>,
@@ -78,19 +95,38 @@ export async function phRequest<TData>(
   }
 
   const client = getClient();
-  const { data, headers, errors } = await client.rawRequest<TData>(
-    query,
-    variables,
-  );
 
-  const rl = parseRateLimit(headers);
-  lastKnownRemaining = rl.remaining;
-  lastKnownResetSeconds = rl.resetSeconds;
-  logRateLimit(rl);
+  // One retry on transient network errors. Cloudflare and PH occasionally
+  // bump a single request; without retry the whole page render crashes.
+  const MAX_ATTEMPTS = 2;
+  let attempt = 0;
+  while (true) {
+    attempt++;
+    try {
+      const { data, headers, errors } = await client.rawRequest<TData>(
+        query,
+        variables,
+      );
 
-  if (errors && errors.length > 0) {
-    throw new Error(`[ph] GraphQL errors: ${JSON.stringify(errors)}`);
+      const rl = parseRateLimit(headers);
+      lastKnownRemaining = rl.remaining;
+      lastKnownResetSeconds = rl.resetSeconds;
+      logRateLimit(rl);
+
+      if (errors && errors.length > 0) {
+        throw new Error(`[ph] GraphQL errors: ${JSON.stringify(errors)}`);
+      }
+
+      return data;
+    } catch (err) {
+      if (attempt >= MAX_ATTEMPTS || !isRetryableError(err)) {
+        throw err;
+      }
+      console.warn(
+        `[ph] transient error on attempt ${attempt}, retrying in 1s:`,
+        err instanceof Error ? err.message : err,
+      );
+      await sleep(1000);
+    }
   }
-
-  return data;
 }

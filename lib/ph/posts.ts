@@ -51,14 +51,30 @@ async function paginatePostsQuery(
   let after: string | undefined;
   for (let page = 0; page < maxPages; page++) {
     if (page > 0) await sleep(PAGE_DELAY_MS);
-    const r = await phRequest<TodayPostsResponse>(query, {
-      postedAfter,
-      after,
-    });
-    for (const edge of r.posts.edges) out.push(edge.node);
-    const info = r.posts.pageInfo;
-    if (!info?.hasNextPage || !info.endCursor) break;
-    after = info.endCursor;
+    try {
+      const r = await phRequest<TodayPostsResponse>(query, {
+        postedAfter,
+        after,
+      });
+      for (const edge of r.posts.edges) out.push(edge.node);
+      const info = r.posts.pageInfo;
+      if (!info?.hasNextPage || !info.endCursor) break;
+      after = info.endCursor;
+    } catch (err) {
+      // If we already have *some* posts from earlier pages, log the
+      // failure but return the partial result — better a partly-filled
+      // feed than a hard error page. If this was the first page and we
+      // have nothing, rethrow so the error boundary can show a useful
+      // message.
+      if (out.length > 0) {
+        console.warn(
+          `[ph] pagination stopped at page ${page} due to error; returning ${out.length} posts so far:`,
+          err instanceof Error ? err.message : err,
+        );
+        break;
+      }
+      throw err;
+    }
   }
   return out;
 }
