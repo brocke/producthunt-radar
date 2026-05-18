@@ -14,11 +14,11 @@ import { db } from "@/lib/db";
 import type { PHPost } from "@/lib/ph/types";
 
 const MODEL = "claude-sonnet-4-6";
-const MAX_TOKENS = 6000;
-// At ~35 output tokens per post (score + ~100-char reason), MAX_TOKENS
-// comfortably fits ~150 posts in one Sonnet call. Beyond that we split
-// into batches so the output cap doesn't truncate the JSON array.
-const BATCH_SIZE = 120;
+const MAX_TOKENS = 8000;
+// Empirically 120 posts × ~60 output tokens each = 7200, which has
+// truncated mid-array. 60 posts × ~60 = 3600 leaves comfortable
+// headroom under MAX_TOKENS even with verbose reasons.
+const BATCH_SIZE = 60;
 
 const SYSTEM_PROMPT = `Du bewertest ProductHunt-Launches durch eine bestimmte Brille (Filter-Perspektive).
 Antworte ausschließlich als gültiges JSON-Array, ohne Markdown-Codefencing, ohne Einleitung.
@@ -74,21 +74,28 @@ async function callClaude(
     messages: [{ role: "user", content: userPrompt }],
   });
 
-  const text = response.content
+  const rawText = response.content
     .filter((b): b is Anthropic.TextBlock => b.type === "text")
     .map((b) => b.text)
     .join("")
-    .trim()
-    // strip ```json fencing just in case the model wraps the output
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "");
+    .trim();
+
+  // Sonnet occasionally wraps the array in code fences or prefixes a
+  // short explanation. Slice between the first `[` and last `]` so the
+  // parse stays robust against that.
+  const firstBracket = rawText.indexOf("[");
+  const lastBracket = rawText.lastIndexOf("]");
+  const jsonText =
+    firstBracket >= 0 && lastBracket > firstBracket
+      ? rawText.slice(firstBracket, lastBracket + 1)
+      : rawText;
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(text);
+    parsed = JSON.parse(jsonText);
   } catch {
     throw new Error(
-      `Lens scoring: invalid JSON from Claude. First 200 chars: ${text.slice(0, 200)}`,
+      `Lens scoring: invalid JSON from Claude (stop_reason=${response.stop_reason ?? "?"}). First 200 chars: ${rawText.slice(0, 200)}`,
     );
   }
   if (!Array.isArray(parsed)) {
