@@ -54,9 +54,17 @@ export default async function HomePage({
   const lens = resolveLens(params.lens, params.q);
   const range = parseRangeKey(params.range);
 
-  const allPosts = await getTodayPosts(RANGE_HOURS[range]);
+  const { posts: allPosts, fetchedAt } = await getTodayPosts(RANGE_HOURS[range]);
   const watchedIds = getWatchlistIds();
   const filtered = filterByTopics(allPosts, selectedTopicSlugs);
+
+  // Has the user actively diverged from the default view (24 h, no
+  // sort/topic/lens)? If so, surface a small "Filter zurücksetzen"-Link.
+  const hasActiveFilters =
+    !!lens ||
+    range !== "24h" ||
+    sort !== "votes" ||
+    selectedTopicSlugs.length > 0;
 
   // When a lens is active, re-rank by Claude scores (and dim low-scorers
   // in PostCard via the `lens` prop). Otherwise fall back to the regular
@@ -92,7 +100,12 @@ export default async function HomePage({
       <header className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
-            ProductHunt Radar
+            <Link
+              href="/"
+              className="rounded-sm transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              ProductHunt Radar
+            </Link>
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {lens
@@ -102,6 +115,12 @@ export default async function HomePage({
               : visible.length === allPosts.length
                 ? `${allPosts.length} Launches aus den ${RANGE_INLINE[range]}.`
                 : `${visible.length} von ${allPosts.length} Launches aus den ${RANGE_INLINE[range]} passen zu deinen Filtern.`}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Feed-Daten von {new Date(fetchedAt).toLocaleTimeString("de-DE", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })} Uhr — Cache läuft 30 Min, danach automatischer Refresh.
           </p>
         </div>
         <div className="flex gap-2">
@@ -134,6 +153,14 @@ export default async function HomePage({
         <RangeSelector />
         <SortControl />
         <TopicFilter topics={topics} />
+        {hasActiveFilters && (
+          <Link
+            href="/"
+            className="ml-auto text-xs text-muted-foreground transition-colors hover:text-brand"
+          >
+            Alle Filter zurücksetzen
+          </Link>
+        )}
       </div>
       <div className="mb-6">
         <LensSelector />

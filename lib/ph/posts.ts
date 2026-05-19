@@ -79,7 +79,17 @@ async function paginatePostsQuery(
   return out;
 }
 
-async function fetchTodayPosts(rangeHours: number): Promise<PHPost[]> {
+export type TodayPostsResult = {
+  posts: PHPost[];
+  /** Epoch ms at the moment this batch was fetched from PH. Used to
+   * show users when the feed was last refreshed; cached together with
+   * the posts so a cache hit returns the original fetch time. */
+  fetchedAt: number;
+};
+
+async function fetchTodayPosts(
+  rangeHours: number,
+): Promise<TodayPostsResult> {
   const postedAfter = new Date(
     Date.now() - rangeHours * 60 * 60 * 1000,
   ).toISOString();
@@ -96,7 +106,7 @@ async function fetchTodayPosts(rangeHours: number): Promise<PHPost[]> {
   // votesCount/commentsCount, which we prefer from whichever fetch ran last.
   for (const node of byNewest) byId.set(node.id, node);
 
-  return Array.from(byId.values());
+  return { posts: Array.from(byId.values()), fetchedAt: Date.now() };
 }
 
 /**
@@ -119,7 +129,7 @@ async function fetchTodayPosts(rangeHours: number): Promise<PHPost[]> {
  */
 export const getTodayPosts = unstable_cache(
   (rangeHours = 72) => fetchTodayPosts(rangeHours),
-  ["ph-today-posts"],
+  ["ph-today-posts-v2"],
   { revalidate: 1800, tags: ["ph-today-posts"] },
 );
 
