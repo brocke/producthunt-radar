@@ -6,6 +6,7 @@ import { LensSelector } from "@/components/lens-selector";
 import { PostCard } from "@/components/post-card";
 import { RangeSelector } from "@/components/range-selector";
 import { SortControl } from "@/components/sort-control";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { TopicFilter } from "@/components/topic-filter";
 import { Button } from "@/components/ui/button";
 import { resolveLens } from "@/lib/lenses/defaults";
@@ -97,9 +98,9 @@ export default async function HomePage({
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-      <header className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
+      <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             <Link
               href="/"
               className="rounded-sm transition-colors hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -123,14 +124,14 @@ export default async function HomePage({
             })} Uhr — Cache läuft 30 Min, danach automatischer Refresh.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <Button
             variant="outline"
             className="gap-1.5"
             render={<Link href="/digest" />}
           >
             <Newspaper className="size-4" aria-hidden />
-            Digest
+            <span className="hidden sm:inline">Digest</span>
           </Button>
           <Button
             variant="outline"
@@ -138,7 +139,7 @@ export default async function HomePage({
             render={<Link href="/watchlist" />}
           >
             <Star className="size-4" aria-hidden />
-            Watchlist
+            <span className="hidden sm:inline">Watchlist</span>
             {watchedIds.size > 0 && (
               <span className="ml-1 rounded-full bg-brand px-1.5 text-xs font-medium text-brand-foreground">
                 {watchedIds.size}
@@ -146,6 +147,7 @@ export default async function HomePage({
             )}
           </Button>
           <AboutDialog />
+          <ThemeToggle />
         </div>
       </header>
 
