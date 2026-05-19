@@ -1,77 +1,54 @@
 "use client";
 
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 /**
  * Three-state theme toggle: Light / Dark / System.
- * Uses next-themes; renders a tiny placeholder until mounted to avoid
- * hydration mismatches (resolvedTheme is undefined server-side).
+ * Uses next-themes; renders a placeholder with the Sun icon until mounted
+ * to avoid hydration mismatches (resolvedTheme is undefined server-side).
  */
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  if (!mounted) {
-    return (
-      <Button
-        variant="outline"
-        size="icon"
-        aria-label="Theme wählen"
-        disabled
-      >
-        <Sun className="size-4" aria-hidden />
-      </Button>
-    );
-  }
+  const current = mounted ? (theme ?? "system") : "system";
+  const Icon =
+    current === "dark" ? Moon : current === "light" ? Sun : Monitor;
 
   return (
-    <Select
-      value={theme ?? "system"}
-      onValueChange={(value) => value && setTheme(value)}
-    >
-      <SelectTrigger
-        className={cn(
-          // Match Button variant="outline" size="icon" sizing exactly.
-          "size-8 p-0 [&>span]:flex [&>span]:size-full [&>span]:items-center [&>span]:justify-center",
-        )}
-        aria-label="Theme wählen"
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="outline" size="icon" aria-label="Theme wählen" />
+        }
       >
-        <span>
-          {theme === "dark" ? (
-            <Moon className="size-4" aria-hidden />
-          ) : theme === "light" ? (
-            <Sun className="size-4" aria-hidden />
-          ) : (
-            <Monitor className="size-4" aria-hidden />
-          )}
-        </span>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="light">
-          <Sun className="size-4" aria-hidden />
+        <Icon className="size-4" aria-hidden />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => setTheme("light")}>
+          <Sun aria-hidden />
           Hell
-        </SelectItem>
-        <SelectItem value="dark">
-          <Moon className="size-4" aria-hidden />
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>
+          <Moon aria-hidden />
           Dunkel
-        </SelectItem>
-        <SelectItem value="system">
-          <Monitor className="size-4" aria-hidden />
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>
+          <Monitor aria-hidden />
           System
-        </SelectItem>
-      </SelectContent>
-    </Select>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
