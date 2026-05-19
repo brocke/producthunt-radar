@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic"; // always hit PH, no caching for smoke t
 
 export async function GET() {
   try {
-    const posts = await getTodayPosts();
+    const { posts } = await getTodayPosts();
 
     console.log(`\n[smoke] ${posts.length} posts from ProductHunt:\n`);
     for (const post of posts) {
