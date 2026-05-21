@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { TransitionPendingProvider } from "@/lib/transition-pending-context";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -37,7 +38,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <TransitionPendingProvider>{children}</TransitionPendingProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/popover";
 import { parseTopicSlugs } from "@/lib/scoring";
 import type { PHTopic } from "@/lib/ph/types";
+import { useReportTransitionPending } from "@/lib/transition-pending-context";
 import { useTransitionHeartbeat } from "@/lib/use-transition-heartbeat";
 
 export function TopicFilter({ topics }: { topics: PHTopic[] }) {
@@ -22,6 +23,7 @@ export function TopicFilter({ topics }: { topics: PHTopic[] }) {
     parseTopicSlugs(searchParams.get("topics") ?? undefined),
   );
   const [isPending, startTransition] = useTransition();
+  useReportTransitionPending(isPending);
   const elapsedSeconds = useTransitionHeartbeat(isPending);
 
   function applyTopics(next: Set<string>) {

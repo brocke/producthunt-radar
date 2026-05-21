@@ -10,6 +10,10 @@ import {
   DEFAULT_LENS_KEYS,
   findMatchingDefaultLens,
 } from "@/lib/lenses/defaults";
+import {
+  useAnyTransitionPending,
+  useReportTransitionPending,
+} from "@/lib/transition-pending-context";
 import { useTransitionHeartbeat } from "@/lib/use-transition-heartbeat";
 import { cn } from "@/lib/utils";
 
@@ -37,10 +41,17 @@ export function LensSelector() {
   // Local textarea state — user's draft, may differ from activePrompt.
   const [draft, setDraft] = useState(activePrompt);
   const [isPending, startTransition] = useTransition();
+  useReportTransitionPending(isPending);
+  // True while any selector's transition is in flight (Range/Sort/Topic/
+  // Lens). When the lens is active, those all trigger fresh Sonnet
+  // scoring on the server — so we show the "Claude bewertet…" banner in
+  // all of those cases, not just our own Apply click.
+  const anyPending = useAnyTransitionPending();
+  const showScoringBanner = isPending || (!!lensParam && anyPending);
 
   const [optimisticActive, setOptimisticActive] = useOptimistic(activePrompt);
 
-  const elapsedSeconds = useTransitionHeartbeat(isPending);
+  const elapsedSeconds = useTransitionHeartbeat(showScoringBanner);
 
   // When activePrompt changes (e.g. after Apply settles or external nav),
   // sync the draft so the field stays consistent with what's actually
@@ -150,7 +161,7 @@ export function LensSelector() {
             }
           }}
         />
-        {draft.length > 0 && !isPending && (
+        {draft.length > 0 && !showScoringBanner && (
           <button
             type="button"
             onClick={() => setDraft("")}
@@ -161,11 +172,23 @@ export function LensSelector() {
             <X className="size-3.5" aria-hidden />
           </button>
         )}
-        {isPending && (
-          <div
-            className="pointer-events-none absolute inset-0 rounded-md bg-background/30 backdrop-blur-[1px]"
-            aria-hidden
-          />
+        {showScoringBanner && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-background/60 backdrop-blur-[2px]">
+            <div className="pointer-events-auto mx-4 flex max-w-md flex-col items-center gap-2 rounded-lg border border-foreground/10 bg-background px-5 py-4 text-center shadow-md">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Loader2 className="size-4 animate-spin text-brand" aria-hidden />
+                Claude bewertet die Posts
+              </div>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Sonnet 4.6 sortiert die Liste nach deiner Brille. Erst-Anwendung
+                dauert typisch <span className="font-medium text-foreground">1–3 Minuten</span> je nach Zeitraum;
+                bekannte Posts kommen aus dem Cache und sind schneller.
+              </p>
+              <p className="text-xs tabular-nums text-muted-foreground">
+                läuft seit {elapsedSeconds}s
+              </p>
+            </div>
+          </div>
         )}
       </div>
 

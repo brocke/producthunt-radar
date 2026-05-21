@@ -15,6 +15,7 @@ import {
   SORT_LABELS,
   type SortKey,
 } from "@/lib/scoring";
+import { useReportTransitionPending } from "@/lib/transition-pending-context";
 import { useTransitionHeartbeat } from "@/lib/use-transition-heartbeat";
 
 export function SortControl() {
@@ -30,6 +31,7 @@ export function SortControl() {
   // sync with the user's intent before the URL updates.
   const [sort, setOptimisticSort] = useOptimistic(fromUrl);
   const [isPending, startTransition] = useTransition();
+  useReportTransitionPending(isPending);
   const elapsedSeconds = useTransitionHeartbeat(isPending);
 
   function handleChange(value: string | null) {

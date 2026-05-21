@@ -16,6 +16,7 @@ import {
   RANGE_LABELS,
   type RangeKey,
 } from "@/lib/range";
+import { useReportTransitionPending } from "@/lib/transition-pending-context";
 import { useTransitionHeartbeat } from "@/lib/use-transition-heartbeat";
 
 export function RangeSelector() {
@@ -23,6 +24,7 @@ export function RangeSelector() {
   const searchParams = useSearchParams();
   const fromUrl = parseRangeKey(searchParams.get("range") ?? undefined);
   const [isPending, startTransition] = useTransition();
+  useReportTransitionPending(isPending);
   const [range, setOptimisticRange] = useOptimistic(fromUrl);
   const elapsedSeconds = useTransitionHeartbeat(isPending);
 
