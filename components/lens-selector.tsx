@@ -174,18 +174,15 @@ export function LensSelector() {
         )}
         {showScoringBanner && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-background/60 backdrop-blur-[2px]">
-            <div className="pointer-events-auto mx-4 flex max-w-md flex-col items-center gap-2 rounded-lg border border-foreground/10 bg-background px-5 py-4 text-center shadow-md">
+            <div className="pointer-events-auto mx-4 flex max-w-md flex-col items-center gap-1.5 rounded-lg border border-foreground/10 bg-background px-5 py-3.5 text-center shadow-md">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <Loader2 className="size-4 animate-spin text-brand" aria-hidden />
                 Claude bewertet die Posts
               </div>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Sonnet 4.6 sortiert die Liste nach deiner Brille. Erst-Anwendung
+                Sonnet 4.6 sortiert die Liste nach der gewählten Lens. Erst-Anwendung
                 dauert typisch <span className="font-medium text-foreground">1–3 Minuten</span> je nach Zeitraum;
-                bekannte Posts kommen aus dem Cache und sind schneller.
-              </p>
-              <p className="text-xs tabular-nums text-muted-foreground">
-                läuft seit {elapsedSeconds}s
+                bekannte Posts kommen aus dem Cache und erscheinen schneller.
               </p>
             </div>
           </div>
