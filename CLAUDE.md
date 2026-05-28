@@ -17,11 +17,11 @@ Projektspezifische Anweisungen für Claude Code.
 
 **Deployment-Workflow** (für Code-Updates):
 ```bash
-ssh root@46.225.137.255 "cd /root/ph-radar && git pull && docker compose up -d --build"
+git push origin HEAD:main
 ```
-Vom Mac via Bash-Tool, 1Password approvet SSH-Agent. Rebuild ~40s.
+Coolify (seit 22.05.26 auf dem Hetzner-Server) deployt automatisch bei push auf `main`. End-to-end ~60–90 s, danach live unter ph-radar.filbro.de.
 
-**Server-Architektur:** `news-caddy` (Caddy 2 Reverse-Proxy, 80/443) terminiert TLS für news-app UND ph-radar. Beide Apps sind Container im `news-app_web`-Netzwerk. ph-radar SQLite persistent in Docker-Volume `phr-data` → `/data/data.db`. node-cron beim Container-Start, Snapshots alle 6h.
+**Server-Architektur:** Coolify v4 verwaltet die App via Traefik (`coolify-proxy`) für TLS. Container-ID ist auto-generiert und ändert sich pro Deploy. SQLite persistent in Coolify-Volume → Container-Mount `/data/data.db`. node-cron beim Container-Start, Snapshots alle 6h. Env-Vars (PH_TOKEN, ANTHROPIC_API_KEY, AUTH_USER/PASS, DISABLE_AUTH, SNAPSHOT_TOKEN, DB_PATH) im Coolify-UI konfiguriert.
 
 **Offene Punkte:**
 - `plan.md` §10 "Später" — Trend-Visualisierung auf Basis der Snapshots-DB. Erst sinnvoll nach 2-4 Wochen Datensammlung.
