@@ -25,7 +25,7 @@ Projektspezifische Anweisungen für Claude Code.
 - **Filter-Reset-Link** — rechts in der Filter-Zeile, sichtbar wenn etwas anderes als Default aktiv.
 
 **Verzeichnis-Mapping:**
-- Lokal: `/Users/filbroki/Documents/Claude Code/ProductHunt Radar/` (Stand 28.05.26 — vermutlich Verschiebung in den nächsten Tagen geplant, dann hier aktualisieren)
+- Lokal: `/Users/filbroki/Library/CloudStorage/Dropbox-KOERTINGINSTITUTE/K2 - Team/Filip/Claude Code/ProductHunt Radar/` (Stand 20.06.26 — von Documents in die Dropbox verschoben)
 - Server: Coolify-managed, kein klassisches `/root/ph-radar/`-Verzeichnis mehr
 
 **Offene Punkte:**
