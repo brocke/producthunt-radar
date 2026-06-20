@@ -5,26 +5,32 @@ Projektspezifische Anweisungen für Claude Code.
 
 ---
 
-## 🚀 Aktueller Stand (Stand 2026-05-16)
+## 🚀 Aktueller Stand (Stand 2026-05-28)
 
-**MVP komplett.** Alle 10 Phasen aus `plan.md` (0–9) sind umgesetzt und auf den Hetzner-VPS deployed.
+**MVP komplett + große Iteration darüber.** Alle 10 Phasen aus `plan.md` (0–9) sind umgesetzt, plus zahlreiche Post-MVP-Features.
 
-**Live:** https://ph-radar.filbro.de (HTTPS via Caddy, HTTP Basic Auth aktiv).
+**Live:** https://ph-radar.filbro.de (HTTPS via Coolify/Traefik, Auth via `DISABLE_AUTH`-env steuerbar).
+
+**Post-MVP-Features (deployed):**
+- **Lenses** — KI-Re-Ranking mit freiem Prompt. Drei Vorlagen (Workflow / Nachbau / Signal), Custom-Prompt frei tippbar. Cache pro `lens_key` in `lens_scores`-Tabelle. Sonnet 4.6, Batch-Scoring 60 Posts/Call, Top-200-Cap pro Aktivierung. Erstanwendung ~80–120 s, danach Cache (<1 s).
+- **Zeitraum-Dropdown** — 24 h (Default) / 3 Tage. PH-API-Pagination mit `pageInfo.endCursor`, max-pages dynamisch nach Range (vermeidet Complexity-Budget-Sprenger). `unstable_cache` mit TTL 30 min keyed auf `rangeHours`, sodass Topic-/Sort-/Lens-Wechsel keinen fresh-fetch triggern.
+- **Robustness-Layer** — `phRequest` retry 1× bei transienten Netzwerk-Fehlern, `paginatePostsQuery` graceful partial result, `useTransitionHeartbeat`-Hook in allen Selectors (hält React-Concurrent-Scheduler wach), Range/Sort/Topic disabled während Pending, gemeinsamer `TransitionPendingProvider`-Context für „Claude bewertet die Posts"-Banner.
+- **Dark Mode** — Light / Dark / System via `next-themes` + shadcn-CSS-Vars. ThemeToggle als Icon-Only DropdownMenu rechts oben (Sun/Moon/Monitor je nach Stand).
+- **Mobile** — Header-Buttons als Icon-only bei `sm:` breakpoint, Title-Auto-Shrink, alle Pages responsive ohne Sonderbehandlung.
+- **Brand-Akzentfarbe** `#e6007e` (Pink) sparsam für Watchlist-Counter, Active-Lens-Pill, Vote-Arrow, BackLink-Hover.
+- **Favicon** — eigenes Logo (Kreuz-Symbol auf ziegelrot) in `app/icon.png` + `app/apple-icon.png`.
+- **BackLink mit URL-State-Erhalt** — `router.back()`-basiert, label-aware (`Back to Watchlist` / `Back to Digest` / `Back to feed`).
+- **About-Modal** — Info-Button rechts oben öffnet Feature-Übersicht mit „Lenses"-Hero-Card, PH-Limits-Liste.
+- **Feed-Zeitstempel** — „Feed-Daten von HH:MM Uhr — Cache läuft 30 Min" unter dem Header.
+- **Filter-Reset-Link** — rechts in der Filter-Zeile, sichtbar wenn etwas anderes als Default aktiv.
 
 **Verzeichnis-Mapping:**
-- Lokal: `/Users/filbroki/Documents/Claude Code/ProductHunt Radar/`
-- Server: `/root/ph-radar/` auf `46.225.137.255` (Ubuntu 24.04, Docker)
-
-**Deployment-Workflow** (für Code-Updates):
-```bash
-git push origin HEAD:main
-```
-Coolify (seit 22.05.26 auf dem Hetzner-Server) deployt automatisch bei push auf `main`. End-to-end ~60–90 s, danach live unter ph-radar.filbro.de.
-
-**Server-Architektur:** Coolify v4 verwaltet die App via Traefik (`coolify-proxy`) für TLS. Container-ID ist auto-generiert und ändert sich pro Deploy. SQLite persistent in Coolify-Volume → Container-Mount `/data/data.db`. node-cron beim Container-Start, Snapshots alle 6h. Env-Vars (PH_TOKEN, ANTHROPIC_API_KEY, AUTH_USER/PASS, DISABLE_AUTH, SNAPSHOT_TOKEN, DB_PATH) im Coolify-UI konfiguriert.
+- Lokal: `/Users/filbroki/Documents/Claude Code/ProductHunt Radar/` (Stand 28.05.26 — vermutlich Verschiebung in den nächsten Tagen geplant, dann hier aktualisieren)
+- Server: Coolify-managed, kein klassisches `/root/ph-radar/`-Verzeichnis mehr
 
 **Offene Punkte:**
-- `plan.md` §10 "Später" — Trend-Visualisierung auf Basis der Snapshots-DB. Erst sinnvoll nach 2-4 Wochen Datensammlung.
+- [KOE-352](https://linear.app/koerting-institute/issue/KOE-352) — Auth Read-Public + Write-Locked (Backlog, Medium). Auth ist live aktuell via `DISABLE_AUTH=true` deaktiviert für Demo-Sharing; das Ticket ist der saubere Long-Term-Fix.
+- `plan.md` §10 "Später" — Trend-Visualisierung auf Basis der Snapshots-DB. Erst sinnvoll nach 2-4 Wochen Datensammlung, mittlerweile haben wir genug Daten — könnte als nächstes Feature angegangen werden.
 
 **Memory-Einträge** (siehe `~/.claude/projects/.../memory/`):
 - `project_deployment.md` — Details zum Hetzner-Setup, Caddy, Container, SSH-Keys
